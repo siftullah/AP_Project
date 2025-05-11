@@ -1,0 +1,433 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model University {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()"))
+  name                     String
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @default(now()) @updatedAt
+  uni_administration_roles UniAdministrationRoles[]
+  departments              Department[]
+  batches                  Batch[]
+  forums                   Forum[]
+  threads                  Thread[]
+  users                    User[]
+}
+
+model User {
+  id                   String               @id
+  first_name           String
+  last_name            String
+  email_address        String
+  role                 String
+  university_id        String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @default(now()) @updatedAt
+  university           University?          @relation(fields: [university_id], references: [id])
+  uni_administrations  UniAdministration[]
+  students             Student[]
+  faculty              Faculty[]
+  classroom_teachers   ClassroomTeachers[]
+  classroom_posts      ClassroomPost[]
+  thread_posts         ThreadPost[]
+  custom_group_members CustomGroupMembers[]
+  forums               Forum[]
+  custom_groups        CustomGroup[]
+  reminders            Reminder[]
+}
+
+model Permission {
+  id                                   String                                     @id @default(dbgenerated("gen_random_uuid()"))
+  permission                           String                                     @default("all")
+  createdAt                            DateTime                                   @default(now())
+  updatedAt                            DateTime                                   @default(now()) @updatedAt
+  default_uni_administration_roles     DefaultUniAdministrationRolesPermissions[]
+  uni_administration_roles_permissions UniAdministrationRolesPermissions[]
+}
+
+model DefaultUniAdministrationRoles {
+  id          String                                     @id @default(dbgenerated("gen_random_uuid()"))
+  role_name   String
+  permissions DefaultUniAdministrationRolesPermissions[]
+  createdAt   DateTime                                   @default(now())
+  updatedAt   DateTime                                   @default(now()) @updatedAt
+}
+
+model DefaultUniAdministrationRolesPermissions {
+  id            String                        @id @default(dbgenerated("gen_random_uuid()"))
+  role          DefaultUniAdministrationRoles @relation(fields: [role_id], references: [id])
+  role_id       String
+  permission    Permission                    @relation(fields: [permission_id], references: [id])
+  permission_id String
+  createdAt     DateTime                      @default(now())
+  updatedAt     DateTime                      @default(now()) @updatedAt
+
+  @@unique([role_id, permission_id])
+}
+
+model UniAdministrationRoles {
+  id                  String                              @id @default(dbgenerated("gen_random_uuid()"))
+  university          University                          @relation(fields: [university_id], references: [id])
+  university_id       String
+  role                String
+  permissions         UniAdministrationRolesPermissions[]
+  uni_administrations UniAdministration[]
+  createdAt           DateTime                            @default(now())
+  updatedAt           DateTime                            @default(now()) @updatedAt
+
+  @@unique([university_id, role])
+}
+
+model UniAdministrationRolesPermissions {
+  id            String                 @id @default(dbgenerated("gen_random_uuid()"))
+  role          UniAdministrationRoles @relation(fields: [role_id], references: [id])
+  role_id       String
+  permission    Permission             @relation(fields: [permission_id], references: [id])
+  permission_id String
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @default(now()) @updatedAt
+
+  @@unique([role_id, permission_id])
+}
+
+model UniAdministration {
+  id        String                 @id @default(dbgenerated("gen_random_uuid()"))
+  user      User                   @relation(fields: [user_id], references: [id])
+  user_id   String
+  role      UniAdministrationRoles @relation(fields: [role_id], references: [id])
+  role_id   String
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @default(now()) @updatedAt
+
+  @@unique([user_id, role_id])
+}
+
+model Department {
+  id            String              @id @default(dbgenerated("gen_random_uuid()"))
+  university    University          @relation(fields: [university_id], references: [id])
+  university_id String
+  name          String
+  batches       DepartmentBatches[]
+  faculties     Faculty[]
+  courses       Course[]
+  groups        DepartmentGroup[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @default(now()) @updatedAt
+
+  @@unique([university_id, name])
+}
+
+model Batch {
+  id            String              @id @default(dbgenerated("gen_random_uuid()"))
+  university    University          @relation(fields: [university_id], references: [id])
+  university_id String
+  name          String
+  departments   DepartmentBatches[]
+  groups        BatchGroup[]
+  classrooms    Classroom[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @default(now()) @updatedAt
+
+  @@unique([university_id, name])
+}
+
+model DepartmentBatches {
+  id         String     @id @default(dbgenerated("gen_random_uuid()"))
+  department Department @relation(fields: [dept_id], references: [id])
+  dept_id    String
+  batch      Batch      @relation(fields: [batch_id], references: [id])
+  batch_id   String
+  students   Student[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @default(now()) @updatedAt
+
+  @@unique([dept_id, batch_id])
+}
+
+model Student {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()"))
+  user                User              @relation(fields: [user_id], references: [id])
+  user_id             String
+  department_batch    DepartmentBatches @relation(fields: [department_batch_id], references: [id])
+  department_batch_id String
+  roll_number         String
+  enrollments         Enrollment[]
+  submissions         Submission[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @default(now()) @updatedAt
+
+  @@unique([user_id])
+  @@unique([department_batch_id, roll_number])
+}
+
+model Faculty {
+  id          String     @id @default(dbgenerated("gen_random_uuid()"))
+  user        User       @relation(fields: [user_id], references: [id])
+  user_id     String
+  department  Department @relation(fields: [dept_id], references: [id])
+  dept_id     String
+  designation String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+
+  @@unique([user_id])
+}
+
+model Course {
+  id          String      @id @default(dbgenerated("gen_random_uuid()"))
+  department  Department  @relation(fields: [dept_id], references: [id])
+  dept_id     String
+  course_name String
+  course_code String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
+  classrooms  Classroom[]
+
+  @@unique([dept_id, course_code])
+}
+
+model Classroom {
+  id          String              @id @default(dbgenerated("gen_random_uuid()"))
+  name        String
+  course      Course              @relation(fields: [course_id], references: [id])
+  course_id   String
+  batch       Batch               @relation(fields: [batch_id], references: [id])
+  batch_id    String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @default(now()) @updatedAt
+  enrollments Enrollment[]
+  teachers    ClassroomTeachers[]
+  threads     ClassroomThread[]
+  assignments Assignment[]
+}
+
+model Enrollment {
+  id           String    @id @default(dbgenerated("gen_random_uuid()"))
+  classroom    Classroom @relation(fields: [classroom_id], references: [id])
+  classroom_id String
+  student      Student   @relation(fields: [student_id], references: [id])
+  student_id   String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+
+  @@unique([classroom_id, student_id])
+}
+
+model ClassroomTeachers {
+  id           String    @id @default(dbgenerated("gen_random_uuid()"))
+  classroom    Classroom @relation(fields: [classroom_id], references: [id])
+  classroom_id String
+  type         String
+  user         User      @relation(fields: [user_id], references: [id])
+  user_id      String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+
+  @@unique([classroom_id, user_id])
+}
+
+model ClassroomThread {
+  id           String          @id @default(dbgenerated("gen_random_uuid()"))
+  classroom    Classroom       @relation(fields: [classroom_id], references: [id])
+  classroom_id String
+  title        String
+  main_post    ClassroomPost?  @relation("MainPost", fields: [main_post_id], references: [id])
+  main_post_id String?         @unique
+  type         String // Announcement, Discussion, Assignment
+  posts        ClassroomPost[] @relation("ThreadPosts")
+  assignments  Assignment[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @default(now()) @updatedAt
+}
+
+model ClassroomPost {
+  id          String                     @id @default(dbgenerated("gen_random_uuid()"))
+  thread      ClassroomThread            @relation("ThreadPosts", fields: [thread_id], references: [id])
+  thread_id   String
+  created_by  User                       @relation(fields: [user_id], references: [id])
+  mainThread  ClassroomThread?           @relation("MainPost")
+  user_id     String
+  type        String
+  description String
+  attachments ClassroomPostAttachments[]
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @default(now()) @updatedAt
+}
+
+model ClassroomPostAttachments {
+  id        String        @id @default(dbgenerated("gen_random_uuid()"))
+  post      ClassroomPost @relation(fields: [post_id], references: [id])
+  post_id   String
+  filename  String
+  filepath  String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now()) @updatedAt
+}
+
+model Assignment {
+  id           String          @id @default(dbgenerated("gen_random_uuid()"))
+  due_date     DateTime
+  classroom    Classroom       @relation(fields: [classroom_id], references: [id])
+  classroom_id String
+  thread       ClassroomThread @relation(fields: [thread_id], references: [id])
+  thread_id    String
+  total_marks  Float
+  submissions  Submission[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @default(now()) @updatedAt
+}
+
+model Submission {
+  id            String                  @id @default(dbgenerated("gen_random_uuid()"))
+  assignment    Assignment              @relation(fields: [assignment_id], references: [id])
+  assignment_id String
+  student       Student                 @relation(fields: [student_id], references: [id])
+  student_id    String
+  submitted_on  DateTime
+  marks         Float?
+  attachments   SubmissionAttachments[]
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @default(now()) @updatedAt
+
+  @@unique([assignment_id, student_id])
+}
+
+model SubmissionAttachments {
+  id            String     @id @default(dbgenerated("gen_random_uuid()"))
+  submission    Submission @relation(fields: [submission_id], references: [id])
+  submission_id String
+  filename      String
+  filepath      String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
+}
+
+model Group {
+  id         String           @id @default(dbgenerated("gen_random_uuid()"))
+  name       String
+  type       String          // "batch", "department", "custom"
+  batch      BatchGroup?
+  department DepartmentGroup?
+  custom     CustomGroup?
+  threads    Thread[]
+  forums     Forum[]         // One-to-many relation with Forum
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @default(now()) @updatedAt
+}
+
+model BatchGroup {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  group     Group    @relation(fields: [group_id], references: [id])
+  group_id  String   @unique
+  batch     Batch    @relation(fields: [batch_id], references: [id])
+  batch_id  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model DepartmentGroup {
+  id            String     @id @default(dbgenerated("gen_random_uuid()"))
+  group         Group      @relation(fields: [group_id], references: [id])
+  group_id      String     @unique
+  department    Department @relation(fields: [department_id], references: [id])
+  department_id String     @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
+}
+
+model CustomGroup {
+  id          String               @id @default(dbgenerated("gen_random_uuid()"))
+  group       Group                @relation(fields: [group_id], references: [id])
+  group_id    String               @unique
+  created_by  User                 @relation(fields: [user_id], references: [id])
+  user_id     String
+  members     CustomGroupMembers[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @default(now()) @updatedAt
+}
+
+model CustomGroupMembers {
+  id              String      @id @default(dbgenerated("gen_random_uuid()"))
+  custom_group    CustomGroup @relation(fields: [custom_group_id], references: [id])
+  custom_group_id String
+  user            User        @relation(fields: [user_id], references: [id])
+  user_id         String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now()) @updatedAt
+
+  @@unique([custom_group_id, user_id])
+}
+
+model Forum {
+  id            String     @id @default(dbgenerated("gen_random_uuid()"))
+  university    University @relation(fields: [university_id], references: [id])
+  university_id String
+  created_by    User       @relation(fields: [user_id], references: [id])
+  user_id       String
+  forum_name    String
+  group         Group?     @relation(fields: [group_id], references: [id])  // Optional many-to-one relation with Group
+  group_id      String?    // Optional foreign key to Group
+  threads       Thread[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
+}
+ 
+model Thread {
+  id            String       @id @default(dbgenerated("gen_random_uuid()"))
+  forum         Forum?       @relation(fields: [forum_id], references: [id])
+  forum_id      String?
+  university    University   @relation(fields: [university_id], references: [id])
+  university_id String
+  main_post     ThreadPost?  @relation("MainPost", fields: [main_post_id], references: [id])
+  main_post_id  String?      @unique
+  group         Group?       @relation(fields: [group_id], references: [id])
+  group_id      String?
+  type          String
+  title         String
+  posts         ThreadPost[] @relation("ThreadPosts")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+}
+  
+model ThreadPost {
+  id          String                  @id @default(dbgenerated("gen_random_uuid()"))
+  thread      Thread                  @relation("ThreadPosts", fields: [thread_id], references: [id])
+  thread_id   String
+  created_by  User                    @relation(fields: [user_id], references: [id])
+  mainThread  Thread?                 @relation("MainPost")
+  user_id     String
+  type        String
+  description String
+  attachments ThreadPostAttachments[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @default(now()) @updatedAt
+}
+ 
+model ThreadPostAttachments {
+  id             String     @id @default(dbgenerated("gen_random_uuid()"))
+  post           ThreadPost @relation(fields: [thread_post_id], references: [id])
+  thread_post_id String
+  filename       String
+  filepath       String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now()) @updatedAt
+}
+
+model Reminder {
+  id            String    @id @default(dbgenerated("gen_random_uuid()"))
+  user_id       String
+  title         String
+  description   String
+  reminder_date DateTime
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @default(now()) @updatedAt
+  user          User      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+}
