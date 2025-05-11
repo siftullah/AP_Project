@@ -21,11 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export default function ForumsPage() {
+export default function ForumsPage({ initialForums }) {
   const router = useRouter()
-  const [forums, setForums] = useState([])
+  const [forums, setForums] = useState(initialForums)
   const [groups, setGroups] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(null)
@@ -40,23 +40,6 @@ export default function ForumsPage() {
   const [editForumName, setEditForumName] = useState('')
   const [editForumId, setEditForumId] = useState('')
   const [showEditDialog, setShowEditDialog] = useState(false)
-
-  useEffect(() => {
-    const fetchForums = async () => {
-      try {
-        const response = await fetch('/api/administration/forums/get-forums')
-        if (!response.ok) throw new Error('Failed to fetch forums')
-        const data = await response.json()
-        setForums(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchForums()
-  }, [])
 
   const fetchGroups = async () => {
     try {
@@ -345,4 +328,33 @@ export default function ForumsPage() {
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const response = await fetch(`http://localhost:3000/api/administration/forums/get-forums`, {
+      headers: {
+        Cookie: req.headers.cookie || ""
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch forums')
+    }
+
+    const forums = await response.json()
+
+    return {
+      props: {
+        initialForums: forums
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialForums: []
+      }
+    }
+  }
 }
