@@ -1,20 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get request body
-    const { group_id } = await request.json()
+    const { group_id } = req.body
 
     // Check if group exists and is custom type
     const existingGroup = await prisma.group.findUnique({
@@ -25,11 +36,11 @@ export async function POST(request: NextRequest) {
     })
 
     if (!existingGroup) {
-      return NextResponse.json({ error: 'Group not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Group not found' })
     }
 
     if (existingGroup.type !== 'custom') {
-      return NextResponse.json({ error: 'Only custom groups can be deleted' }, { status: 400 })
+      return res.status(400).json({ error: 'Only custom groups can be deleted' })
     }
 
     // Delete thread post attachments
@@ -68,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     // Delete custom group members first
     await prisma.customGroupMembers.deleteMany({
-      where: { custom_group_id: existingGroup.custom!.id }
+      where: { custom_group_id: existingGroup.custom.id }
     })
 
     // Delete custom group
@@ -82,16 +93,13 @@ export async function POST(request: NextRequest) {
     })
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.status(200).json({ 
       message: 'Group deleted successfully'
     })
 
   } catch (error) {
     console.error('Error in delete-group:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete group' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete group' })
   }
 }

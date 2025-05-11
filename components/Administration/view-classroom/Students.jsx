@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,24 +13,13 @@ import { Label } from "@/components/ui/label"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Check } from "lucide-react"
 
-interface Student {
-  user_id: string
-  roll_number: string
-  name: string
-  is_enrolled: boolean
-}
-
-interface StudentsProps {
-  classroomId: string
-}
-
-export default function Students({ classroomId }: StudentsProps) {
-  const [enrolledStudents, setEnrolledStudents] = useState<Student[]>([])
-  const [allStudents, setAllStudents] = useState<Student[]>([])
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([])
+export default function Students({ classroomId }) {
+  const [enrolledStudents, setEnrolledStudents] = useState([])
+  const [allStudents, setAllStudents] = useState([])
+  const [selectedStudents, setSelectedStudents] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -49,8 +36,8 @@ export default function Students({ classroomId }: StudentsProps) {
         
         // Set initially selected students
         setSelectedStudents(data.all_students
-          .filter((student: Student) => student.is_enrolled)
-          .map((student: Student) => student.user_id)
+          .filter(student => student.is_enrolled)
+          .map(student => student.user_id)
         )
 
       } catch (err) {

@@ -1,19 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function PUT(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'PUT') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
+    }
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
 
     // Get role details from request body
-    const { id: roleId, role: roleName, permissions } = await request.json()
+    const { id: roleId, role: roleName, permissions } = req.body
 
     // Update role name
     await prisma.uniAdministrationRoles.update({
@@ -50,13 +61,13 @@ export async function PUT(request: NextRequest) {
       await prisma.uniAdministrationRolesPermissions.create({
         data: {
           role_id: roleId,
-          permission_id: allPermission!.id
+          permission_id: allPermission.id
         }
       })
     } else {
       // Otherwise add all requested permissions
       await prisma.uniAdministrationRolesPermissions.createMany({
-        data: permissions.map((permissionId: string) => ({
+        data: permissions.map(permissionId => ({
           role_id: roleId,
           permission_id: permissionId
         }))
@@ -64,14 +75,11 @@ export async function PUT(request: NextRequest) {
     }
 
     await prisma.$disconnect()
-    return NextResponse.json({ message: 'Role updated successfully' })
+    return res.status(200).json({ message: 'Role updated successfully' })
 
   } catch (error) {
     console.error('Error in edit-role:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to update role' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to update role' })
   }
 }

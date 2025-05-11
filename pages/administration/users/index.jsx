@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,12 +30,12 @@ export default function UsersPage() {
   const [faculty, setFaculty] = useState(initialFaculty)
   const [students, setStudents] = useState(initialStudents)
   const [newUser, setNewUser] = useState({ name: '', department: '', role: '', year: '' })
-  const [editingUser, setEditingUser] = useState<(typeof initialFaculty[0] & { year?: string }) | null>(null)
+  const [editingUser, setEditingUser] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [userType, setUserType] = useState<'faculty' | 'student'>('faculty')
+  const [userType, setUserType] = useState('faculty')
   const { toast } = useToast()
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target
     if (editingUser) {
       setEditingUser({ ...editingUser, [name]: value })
@@ -46,7 +44,7 @@ export default function UsersPage() {
     }
   }
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = (name, value) => {
     if (editingUser) {
       setEditingUser({ ...editingUser, [name]: value })
     } else {
@@ -84,7 +82,7 @@ export default function UsersPage() {
     }
   }
 
-  const handleDeleteUser = (id: number, type: 'faculty' | 'student') => {
+  const handleDeleteUser = (id, type) => {
     if (type === 'faculty') {
       setFaculty(faculty.filter(f => f.id !== id))
     } else {
@@ -248,4 +246,3 @@ export default function UsersPage() {
     </div>
   )
 }
-

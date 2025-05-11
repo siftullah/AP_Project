@@ -1,32 +1,41 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function DELETE(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'DELETE') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    // Get current user and verify university_id
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
     }
-    const universityId = user?.publicMetadata['university_id'] as string
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
 
-    // Get post_id from URL params
-    const { searchParams } = new URL(request.url)
-    const postId = searchParams.get('post_id')
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
-    if (!postId) {
-      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
+    // Get post_id from query params
+    const { post_id } = req.query
+
+    if (!post_id) {
+      return res.status(400).json({ error: 'Post ID is required' })
     }
 
     // Check if post is a main post
     const thread = await prisma.thread.findFirst({
       where: {
-        main_post_id: postId
+        main_post_id: post_id
       },
       include: {
         posts: {
@@ -41,7 +50,7 @@ export async function DELETE(request: NextRequest) {
     // Delete post attachments first
     await prisma.threadPostAttachments.deleteMany({
       where: {
-        thread_post_id: postId
+        thread_post_id: post_id
       }
     })
 
@@ -57,19 +66,16 @@ export async function DELETE(request: NextRequest) {
     // Delete the post
     const deletedPost = await prisma.threadPost.delete({
       where: {
-        id: postId
+        id: post_id
       }
     })
 
     await prisma.$disconnect()
-    return NextResponse.json(deletedPost)
+    return res.status(200).json(deletedPost)
 
   } catch (error) {
     console.error('Error in delete-post:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete post' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete post' })
   }
 }

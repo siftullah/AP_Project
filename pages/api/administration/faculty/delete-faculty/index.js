@@ -1,23 +1,30 @@
-export const dynamic = 'force-dynamic';
-
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser, clerkClient } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
-  const clerk_client = await clerkClient()
   
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
     }
-    const universityId = user.publicMetadata['university_id'] as string
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get faculty_id from request body
-    const { faculty_id } = await request.json()
+    const { faculty_id } = req.body
 
     // Get existing faculty with user details
     const existingFaculty = await prisma.faculty.findUnique({
@@ -26,7 +33,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!existingFaculty) {
-      return NextResponse.json({ error: 'Faculty not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Faculty not found' })
     }
 
     // Delete all related records in transaction
@@ -113,19 +120,16 @@ export async function POST(request: NextRequest) {
     })
 
     // Delete Clerk user
-    await clerk_client.users.deleteUser(existingFaculty.user_id)
+    await client.users.deleteUser(existingFaculty.user_id)
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.status(200).json({ 
       message: 'Faculty deleted successfully'
     })
 
   } catch (error) {
     console.error('Error in delete-faculty:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete faculty' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete faculty' })
   }
 }

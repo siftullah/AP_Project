@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -50,14 +48,11 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
@@ -66,43 +61,30 @@ const groupSchema = z.object({
   users: z.array(z.string()).min(1, "At least one user must be selected")
 })
 
-type Group = {
-  group_id: string
-  group_name: string
-  group_type: string
-  created_at: string
-}
-
-type Member = {
-  user_id: string
-  name: string
-  role: string
-}
-
 export default function GroupsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [groups, setGroups] = useState<Group[]>([])
-  const [members, setMembers] = useState<Member[]>([])
-  const [users, setUsers] = useState<Member[]>([])
+  const [groups, setGroups] = useState([])
+  const [members, setMembers] = useState([])
+  const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditMembersDialogOpen, setIsEditMembersDialogOpen] = useState(false)
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [selectedGroup, setSelectedGroup] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(null)
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
 
-  const columns: ColumnDef<Group>[] = [
+  const columns = [
     {
       accessorKey: "group_name",
       header: "Name",
     },
     {
-      accessorKey: "group_type",
+      accessorKey: "group_type", 
       header: "Type",
     },
     {
@@ -187,7 +169,7 @@ export default function GroupsPage() {
     },
   })
 
-  const addForm = useForm<z.infer<typeof groupSchema>>({
+  const addForm = useForm({
     resolver: zodResolver(groupSchema),
     defaultValues: {
       name: "",
@@ -195,7 +177,7 @@ export default function GroupsPage() {
     }
   })
 
-  const editForm = useForm<z.infer<typeof groupSchema>>({
+  const editForm = useForm({
     resolver: zodResolver(groupSchema),
     defaultValues: {
       name: selectedGroup?.group_name || "",
@@ -203,7 +185,7 @@ export default function GroupsPage() {
     }
   })
 
-  const editMembersForm = useForm<z.infer<typeof groupSchema>>({
+  const editMembersForm = useForm({
     resolver: zodResolver(groupSchema.pick({ users: true })),
     defaultValues: {
       users: []
@@ -246,7 +228,7 @@ export default function GroupsPage() {
     }
   }
 
-  const handleView = async (groupId: string) => {
+  const handleView = async (groupId) => {
     try {
       const res = await fetch('/api/administration/groups/view-group-members', {
         method: 'POST',
@@ -266,7 +248,7 @@ export default function GroupsPage() {
     }
   }
 
-  const onAddSubmit = async (values: z.infer<typeof groupSchema>) => {
+  const onAddSubmit = async (values) => {
     try {
       setIsLoading(true)
       const res = await fetch('/api/administration/groups/add-group', {
@@ -299,7 +281,7 @@ export default function GroupsPage() {
     }
   }
 
-  const onEditSubmit = async (values: z.infer<typeof groupSchema>) => {
+  const onEditSubmit = async (values) => {
     if (!selectedGroup) return
 
     try {
@@ -333,7 +315,7 @@ export default function GroupsPage() {
     }
   }
 
-  const onEditMembersSubmit = async (values: z.infer<typeof groupSchema>) => {
+  const onEditMembersSubmit = async (values) => {
     if (!selectedGroup) return
 
     try {
@@ -367,7 +349,7 @@ export default function GroupsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       setIsDeleting(id)
       const res = await fetch('/api/administration/groups/delete-group', {
@@ -512,7 +494,7 @@ export default function GroupsPage() {
         <div className="flex items-center py-4">
           <Input
             placeholder="Filter groups..."
-            value={(table.getColumn("group_name")?.getFilterValue() as string) ?? ""}
+            value={(table.getColumn("group_name")?.getFilterValue() ?? "")}
             onChange={(event) =>
               table.getColumn("group_name")?.setFilterValue(event.target.value)
             }

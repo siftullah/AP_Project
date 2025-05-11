@@ -1,7 +1,5 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/router'
 import {
   Table,
   TableBody,
@@ -41,54 +39,35 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
-const departmentSchema = z.object({
-  name: z.string().min(1, "Department name is required")
+const batchSchema = z.object({
+  name: z.string().min(1, "Batch name is required")
 })
 
-type Department = {
-  id: string
-  name: string
-  student_count: number
-  course_count: number
-  classroom_count: number
-  faculty_count: number
-}
-
-export default function DepartmentsPage() {
+export default function BatchesPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [departments, setDepartments] = useState<Department[]>([])
+  const [batches, setBatches] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [selectedBatch, setSelectedBatch] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(null)
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
 
-  const columns: ColumnDef<Department>[] = [
+  const columns = [
     {
       accessorKey: "name",
       header: "Name",
     },
     {
-      accessorKey: "faculty_count",
-      header: "Faculty",
-    },
-    {
       accessorKey: "student_count", 
       header: "Students",
-    },
-    {
-      accessorKey: "course_count",
-      header: "Courses",
     },
     {
       accessorKey: "classroom_count",
@@ -97,15 +76,15 @@ export default function DepartmentsPage() {
     {
       id: "actions",
       cell: ({ row }) => {
-        const dept = row.original
+        const batch = row.original
         return (
           <div className="space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                setSelectedDepartment(dept)
-                editForm.setValue("name", dept.name)
+                setSelectedBatch(batch)
+                editForm.setValue("name", batch.name)
                 setIsEditDialogOpen(true)
               }}
             >
@@ -114,10 +93,10 @@ export default function DepartmentsPage() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => handleDelete(dept.id)}
-              disabled={isDeleting === dept.id}
+              onClick={() => handleDelete(batch.id)}
+              disabled={isDeleting === batch.id}
             >
-              {isDeleting === dept.id && (
+              {isDeleting === batch.id && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Delete
@@ -129,7 +108,7 @@ export default function DepartmentsPage() {
   ]
 
   const table = useReactTable({
-    data: departments,
+    data: batches,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -143,30 +122,30 @@ export default function DepartmentsPage() {
     },
   })
 
-  const addForm = useForm<z.infer<typeof departmentSchema>>({
-    resolver: zodResolver(departmentSchema),
+  const addForm = useForm({
+    resolver: zodResolver(batchSchema),
     defaultValues: {
       name: ""
     }
   })
 
-  const editForm = useForm<z.infer<typeof departmentSchema>>({
-    resolver: zodResolver(departmentSchema),
+  const editForm = useForm({
+    resolver: zodResolver(batchSchema),
     defaultValues: {
-      name: selectedDepartment?.name || ""
+      name: selectedBatch?.name || ""
     }
   })
 
-  const fetchDepartments = async () => {
+  const fetchBatches = async () => {
     try {
-      const res = await fetch('/api/administration/departments/get-departments')
+      const res = await fetch('/api/administration/batches/get-batches')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setDepartments(data)
+      setBatches(data)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch departments",
+        description: "Failed to fetch batches",
         variant: "destructive"
       })
     } finally {
@@ -174,10 +153,10 @@ export default function DepartmentsPage() {
     }
   }
 
-  const onAddSubmit = async (values: z.infer<typeof departmentSchema>) => {
+  const onAddSubmit = async (values) => {
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/departments/add-department', {
+      const res = await fetch('/api/administration/batches/add-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values)
@@ -187,15 +166,15 @@ export default function DepartmentsPage() {
       
       toast({
         title: "Success",
-        description: "Department added successfully"
+        description: "Batch added successfully"
       })
       setIsAddDialogOpen(false)
       addForm.reset()
-      fetchDepartments()
+      fetchBatches()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add department",
+        description: "Failed to add batch",
         variant: "destructive"
       })
     } finally {
@@ -203,17 +182,17 @@ export default function DepartmentsPage() {
     }
   }
 
-  const onEditSubmit = async (values: z.infer<typeof departmentSchema>) => {
-    if (!selectedDepartment) return
+  const onEditSubmit = async (values) => {
+    if (!selectedBatch) return
 
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/departments/edit-department', {
+      const res = await fetch('/api/administration/batches/edit-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          department_id: selectedDepartment.id,
-          department_name: values.name
+          batch_id: selectedBatch.id,
+          batch_name: values.name
         })
       })
       const data = await res.json()
@@ -221,15 +200,15 @@ export default function DepartmentsPage() {
 
       toast({
         title: "Success",
-        description: "Department updated successfully"
+        description: "Batch updated successfully"
       })
       setIsEditDialogOpen(false)
       editForm.reset()
-      fetchDepartments()
+      fetchBatches()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update department",
+        description: "Failed to update batch",
         variant: "destructive"
       })
     } finally {
@@ -237,26 +216,26 @@ export default function DepartmentsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       setIsDeleting(id)
-      const res = await fetch('/api/administration/departments/delete-department', {
+      const res = await fetch('/api/administration/batches/delete-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ department_id: id })
+        body: JSON.stringify({ batch_id: id })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
       toast({
         title: "Success",
-        description: "Department deleted successfully"
+        description: "Batch deleted successfully"
       })
-      fetchDepartments()
+      fetchBatches()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete department",
+        description: "Failed to delete batch",
         variant: "destructive"
       })
     } finally {
@@ -265,7 +244,7 @@ export default function DepartmentsPage() {
   }
 
   useEffect(() => {
-    fetchDepartments()
+    fetchBatches()
   }, [])
 
   if (isLoadingInitial) {
@@ -279,16 +258,16 @@ export default function DepartmentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-4xl font-pacifico text-sky-400">Departments</h2>
+        <h2 className="text-4xl font-pacifico text-sky-400">Batches</h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add Department</Button>
+            <Button>Add Batch</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Department</DialogTitle>
+              <DialogTitle>Add New Batch</DialogTitle>
               <DialogDescription>
-                Enter the details of the new department here.
+                Enter the details of the new batch here.
               </DialogDescription>
             </DialogHeader>
             <Form {...addForm}>
@@ -309,7 +288,7 @@ export default function DepartmentsPage() {
                 <DialogFooter>
                   <Button type="submit" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add Department
+                    Add Batch
                   </Button>
                 </DialogFooter>
               </form>
@@ -321,8 +300,8 @@ export default function DepartmentsPage() {
       <div>
         <div className="flex items-center py-4">
           <Input
-            placeholder="Filter departments..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            placeholder="Filter batches..."
+            value={(table.getColumn("name")?.getFilterValue() ?? "")}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
@@ -361,7 +340,7 @@ export default function DepartmentsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No departments found.
+                    No batches found.
                   </TableCell>
                 </TableRow>
               )}
@@ -391,9 +370,9 @@ export default function DepartmentsPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Department</DialogTitle>
+            <DialogTitle>Edit Batch</DialogTitle>
             <DialogDescription>
-              Update the department details here.
+              Update the batch details here.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -414,7 +393,7 @@ export default function DepartmentsPage() {
               <DialogFooter>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Department
+                  Update Batch
                 </Button>
               </DialogFooter>
             </form>

@@ -1,25 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
+    }
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
     if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
 
     // Get role details from request body
-    const { role: roleName, permissions } = await request.json()
+    const { role: roleName, permissions } = req.body
 
     // Create new role
     const newRole = await prisma.uniAdministrationRoles.create({
       data: {
         role: roleName,
-        university_id: user.publicMetadata['university_id'] as string
+        university_id: user.publicMetadata['university_id']
       }
     })
 
@@ -41,13 +52,13 @@ export async function POST(request: NextRequest) {
       await prisma.uniAdministrationRolesPermissions.create({
         data: {
           role_id: newRole.id,
-          permission_id: allPermission!.id
+          permission_id: allPermission.id
         }
       })
     } else {
       // Otherwise add all requested permissions
       await prisma.uniAdministrationRolesPermissions.createMany({
-        data: permissions.map((permissionId: string) => ({
+        data: permissions.map(permissionId => ({
           role_id: newRole.id,
           permission_id: permissionId
         }))
@@ -55,14 +66,11 @@ export async function POST(request: NextRequest) {
     }
 
     await prisma.$disconnect()
-    return NextResponse.json({ message: 'Role created successfully' })
+    return res.status(200).json({ message: 'Role created successfully' })
 
   } catch (error) {
     console.error('Error in add-role:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to create role' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to create role' })
   }
 }

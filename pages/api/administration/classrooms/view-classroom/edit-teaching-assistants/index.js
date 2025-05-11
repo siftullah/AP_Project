@@ -1,24 +1,35 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
    
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
+    }
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
     if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
 
     // Get request body
-    const { classroom_id, user_ids } = await request.json()
+    const { classroom_id, user_ids } = req.body
 
     if (!classroom_id || !user_ids) {
-      return NextResponse.json({ error: 'Classroom ID and user IDs are required' }, { status: 400 })
+      return res.status(400).json({ error: 'Classroom ID and user IDs are required' })
     }
 
     // Get existing classroom TAs
@@ -35,7 +46,7 @@ export async function POST(request: NextRequest) {
     const existingTAIds = existingTAs.map(t => t.user_id)
     
     // Find TAs to add and remove
-    const tasToAdd = user_ids.filter((id: string) => !existingTAIds.includes(id))
+    const tasToAdd = user_ids.filter(id => !existingTAIds.includes(id))
     const tasToRemove = existingTAs.filter(t => !user_ids.includes(t.user_id))
     const taIdsToRemove = tasToRemove.map(t => t.user_id)
 
@@ -44,7 +55,7 @@ export async function POST(request: NextRequest) {
       // Add new TAs
       if (tasToAdd.length > 0) {
         await tx.classroomTeachers.createMany({
-          data: tasToAdd.map((userId: string) => ({
+          data: tasToAdd.map(userId => ({
             classroom_id: classroom_id,
             user_id: userId,
             type: 'ta'
@@ -145,14 +156,11 @@ export async function POST(request: NextRequest) {
     })
 
     await prisma.$disconnect()
-    return NextResponse.json({ message: 'Teaching assistants updated successfully' })
+    return res.json({ message: 'Teaching assistants updated successfully' })
 
   } catch (error) {
     console.error('Error in edit-teaching-assistants:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to update teaching assistants' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to update teaching assistants' })
   }
 }

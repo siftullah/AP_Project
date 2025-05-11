@@ -1,7 +1,8 @@
 import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { prisma } from "@/lib/prisma";
 
-export default async function handler(req, res) {
+export default async function handler(req, res) 
+{
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -14,11 +15,8 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-  // Initialize the Backend SDK
-  const client = await clerkClient()
-
-  // Get the user's full `Backend User` object
-  const user = await client.users.getUser(userId)
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
 
     if (!user?.publicMetadata['university_id']) {
       return res.status(401).json({ error: 'University ID of authenticated user not found' })

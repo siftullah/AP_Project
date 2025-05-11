@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -48,54 +46,37 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
 const courseSchema = z.object({
   course_name: z.string().min(1, "Course name is required"),
-  course_code: z.string().min(1, "Course code is required"),
+  course_code: z.string().min(1, "Course code is required"), 
   department_id: z.string().min(1, "Department is required")
 })
-
-type Course = {
-  id: string
-  name: string
-  code: string
-  department: string
-  department_id: string
-  student_count: number
-  classroom_count: number
-}
-
-type Department = {
-  id: string
-  name: string
-}
 
 export default function CoursesPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [courses, setCourses] = useState<Course[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
+  const [courses, setCourses] = useState([])
+  const [departments, setDepartments] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [selectedCourse, setSelectedCourse] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(null)
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
 
-  const columns: ColumnDef<Course>[] = [
+  const columns = [
     {
       accessorKey: "name",
       header: "Name",
     },
     {
-      accessorKey: "code",
+      accessorKey: "code", 
       header: "Code",
     },
     {
@@ -103,12 +84,12 @@ export default function CoursesPage() {
       header: "Department",
     },
     {
-      accessorKey: "student_count", 
+      accessorKey: "student_count",
       header: "Students",
     },
     {
       accessorKey: "classroom_count",
-      header: "Classrooms",
+      header: "Classrooms", 
     },
     {
       id: "actions",
@@ -161,7 +142,7 @@ export default function CoursesPage() {
     },
   })
 
-  const addForm = useForm<z.infer<typeof courseSchema>>({
+  const addForm = useForm({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       course_name: "",
@@ -170,7 +151,7 @@ export default function CoursesPage() {
     }
   })
 
-  const editForm = useForm<z.infer<typeof courseSchema>>({
+  const editForm = useForm({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       course_name: selectedCourse?.name || "",
@@ -211,7 +192,7 @@ export default function CoursesPage() {
     }
   }
 
-  const onAddSubmit = async (values: z.infer<typeof courseSchema>) => {
+  const onAddSubmit = async (values) => {
     try {
       setIsLoading(true)
       const res = await fetch('/api/administration/courses/add-course', {
@@ -246,7 +227,7 @@ export default function CoursesPage() {
     }
   }
 
-  const onEditSubmit = async (values: z.infer<typeof courseSchema>) => {
+  const onEditSubmit = async (values) => {
     if (!selectedCourse) return
 
     try {
@@ -282,7 +263,7 @@ export default function CoursesPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       setIsDeleting(id)
       const res = await fetch('/api/administration/courses/delete-course', {
@@ -405,7 +386,7 @@ export default function CoursesPage() {
         <div className="flex items-center py-4">
           <Input
             placeholder="Filter courses..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            value={table.getColumn("name")?.getFilterValue() ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }

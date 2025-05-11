@@ -1,32 +1,42 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function GET(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found'  }, { status: 401 })
+    // Get current user and verify university_id
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
     }
-    const universityId = user?.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get classroom ID from URL
-    const { searchParams } = new URL(request.url)
-    const classroomId = searchParams.get('classroom_id')
+    const { classroom_id } = req.query
 
-    if (!classroomId) {
-      return NextResponse.json({ error: 'Classroom ID is required' }, { status: 400 })
+    if (!classroom_id) {
+      return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
     // Get classroom with related data
     const classroom = await prisma.classroom.findFirst({
       where: {
-        id: classroomId,
+        id: classroom_id,
         course: {
           department: {
             university_id: universityId
@@ -45,7 +55,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!classroom) {
-      return NextResponse.json({ error: 'Classroom not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Classroom not found' })
     }
 
     // Format the response
@@ -62,14 +72,11 @@ export async function GET(request: NextRequest) {
     }
 
     await prisma.$disconnect()
-    return NextResponse.json(formattedClassroom)
+    return res.json(formattedClassroom)
 
   } catch (error) {
     console.error('Error in get-classroom-details:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to fetch classroom details' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to fetch classroom details' })
   }
 }

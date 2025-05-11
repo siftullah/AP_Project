@@ -1,26 +1,37 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function PUT(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'PUT') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
     // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user?.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!(user?.publicMetadata['university_id'])) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get request body
-    const body = await request.json()
+    const body = req.body
     const { threadId, title } = body
 
     if (!threadId || !title) {
-      return NextResponse.json({ error: 'Thread ID and title are required' }, { status: 400 })
+      return res.status(400).json({ error: 'Thread ID and title are required' })
     }
 
     // Update thread
@@ -34,14 +45,11 @@ export async function PUT(request: NextRequest) {
     })
 
     await prisma.$disconnect()
-    return NextResponse.json(updatedThread)
+    return res.status(200).json(updatedThread)
 
   } catch (error) {
     console.error('Error in edit-thread:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to update thread' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to update thread' })
   }
 }

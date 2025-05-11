@@ -1,36 +1,40 @@
-export const dynamic = 'force-dynamic';
-
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get classroom details from request body
-    const body = await request.json()
-    console.log('Request body:', JSON.stringify(body, null, 2))
-    const classroom_id = body.classroom_id
-    const classroom_name = body.name // Changed from classroom_name to name to match frontend
-    const batch_id = body.batch_id
-    const course_id = body.course_id
+    const { classroom_id, name: classroom_name, batch_id, course_id } = req.body
+    console.log('Request body:', JSON.stringify(req.body, null, 2))
     console.log('Parsed values:', JSON.stringify({
       classroom_id,
       classroom_name,
-      batch_id, 
+      batch_id,
       course_id
     }, null, 2))
 
     if (!classroom_id) {
-      return NextResponse.json({ error: 'Classroom ID is required' }, { status: 400 })
+      return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
     // Verify classroom exists and belongs to user's university
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!existingClassroom) {
-      return NextResponse.json({ error: 'Classroom not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Classroom not found' })
     }
 
     // Verify course exists and belongs to user's university
@@ -60,7 +64,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!course) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Course not found' })
     }
 
     // Verify batch exists and belongs to user's university
@@ -72,7 +76,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!batch) {
-      return NextResponse.json({ error: 'Batch not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Batch not found' })
     }
 
     // Update classroom
@@ -88,7 +92,7 @@ export async function POST(request: NextRequest) {
     })
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.json({ 
       message: 'Classroom updated successfully',
       classroom
     })
@@ -96,9 +100,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in edit-classroom:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to update classroom' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to update classroom' })
   }
 }

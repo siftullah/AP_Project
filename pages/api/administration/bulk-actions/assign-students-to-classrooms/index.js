@@ -1,46 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser,auth } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 import * as XLSX from 'xlsx'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-  await auth()
-    // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found'  }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user?.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get form data
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const mappingsStr = formData.get('mappings') as string
+    const formData = await req.formData()
+    const file = formData.get('file')
+    const mappingsStr = formData.get('mappings')
     const mappings = JSON.parse(mappingsStr)
 
     // Read Excel file
     const buffer = await file.arrayBuffer()
     const workbook = XLSX.read(buffer, { type: 'array' })
     const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as Record<string, string>[]
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
 
     // Skip header row and track failed rows
-    const failedRows: Record<string, string>[] = []
+    const failedRows = []
     
     // Process each row starting from index 1 (skipping header)
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i]
       try {
         // Extract mapped data
-        const rollNo = row[mappings['Roll No']] as string
-        const department = row[mappings['Department']] as string
-        const courseCode = row[mappings['Course Code']] as string
-        const batch = row[mappings['Batch']] as string
-        const classroomName = row[mappings['Classroom Name']] as string
-        const action = row[mappings['Action']] as string
+        const rollNo = row[mappings['Roll No']]
+        const department = row[mappings['Department']]
+        const courseCode = row[mappings['Course Code']]
+        const batch = row[mappings['Batch']]
+        const classroomName = row[mappings['Classroom Name']]
+        const action = row[mappings['Action']]
 
         // Check if student exists
         const student = await prisma.student.findFirst({
@@ -147,7 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.json({ 
       success: true,
       failedRows: failedRows.length > 0 ? failedRows : undefined
     })
@@ -155,9 +164,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in assign-students-to-classrooms:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to process student classroom assignments' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to process student classroom assignments' })
   }
 }

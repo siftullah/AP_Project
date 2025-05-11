@@ -1,26 +1,36 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function GET(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
    
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
     }
-    const universityId = user.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get classroom ID from URL
-    const { searchParams } = new URL(request.url)
-    const classroomId = searchParams.get('classroom_id')
+    const { classroom_id: classroomId } = req.query
 
     if (!classroomId) {
-      return NextResponse.json({ error: 'Classroom ID is required' }, { status: 400 })
+      return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
     // Get classroom teachers where type is ta
@@ -68,7 +78,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Group students by department
-    const studentsByDepartment: { [key: string]: any[] } = {}
+    const studentsByDepartment = {}
     students.forEach(student => {
       const department = student.department_batch.department.name
       
@@ -85,16 +95,13 @@ export async function GET(request: NextRequest) {
     })
 
     await prisma.$disconnect()
-    return NextResponse.json({
+    return res.status(200).json({
       students_by_department: studentsByDepartment
     })
 
   } catch (error) {
     console.error('Error in get-teaching-assistants:', error)
-    await prisma.$disconnect() 
-    return NextResponse.json(
-      { error: 'Failed to fetch teaching assistants' },
-      { status: 500 }
-    )
+    await prisma.$disconnect()
+    return res.status(500).json({ error: 'Failed to fetch teaching assistants' })
   }
 }

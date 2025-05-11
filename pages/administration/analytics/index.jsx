@@ -1,5 +1,3 @@
-'use client'
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -27,7 +25,7 @@ const departmentPerformance = [
   { name: 'CE', performance: 87 },
 ]
 
-export default function AnalyticsPage() {
+function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-4xl font-pacifico text-sky-400">Analytics</h2>
@@ -99,3 +97,4 @@ export default function AnalyticsPage() {
   )
 }
 
+export default AnalyticsPage

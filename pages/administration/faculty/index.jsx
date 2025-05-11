@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -48,70 +46,39 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
-const studentSchema = z.object({
-  roll_number: z.string().min(1, "Roll number is required"),
+const facultySchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   department_id: z.string().min(1, "Department is required"),
-  batch_id: z.string().min(1, "Batch is required")
+  designation: z.string().min(1, "Designation is required")
 })
 
-type Student = {
-  id: string
-  roll_number: string
-  first_name: string
-  last_name: string
-  email: string
-  department: string
-  department_id: string
-  batch: string
-  batch_id: string
-  enrolled_courses_count: number
-}
-
-type Department = {
-  department_id: string
-  department_name: string
-}
-
-type Batch = {
-  batch_id: string
-  batch_name: string
-}
-
-export default function StudentsPage() {
+export default function FacultyPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [students, setStudents] = useState<Student[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [batches, setBatches] = useState<Batch[]>([])
+  const [faculty, setFaculty] = useState([])
+  const [departments, setDepartments] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [selectedFaculty, setSelectedFaculty] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(null)
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
 
-  const columns: ColumnDef<Student>[] = [
-    {
-      accessorKey: "roll_number",
-      header: "Roll Number",
-    },
+  const columns = [
     {
       accessorKey: "first_name",
       header: "First Name",
     },
     {
-      accessorKey: "last_name",
+      accessorKey: "last_name", 
       header: "Last Name",
     },
     {
@@ -123,30 +90,29 @@ export default function StudentsPage() {
       header: "Department",
     },
     {
-      accessorKey: "batch",
-      header: "Batch",
+      accessorKey: "designation",
+      header: "Designation",
     },
     {
-      accessorKey: "enrolled_courses_count",
-      header: "Enrolled Courses",
+      accessorKey: "classrooms_count",
+      header: "Classes",
     },
     {
       id: "actions",
       cell: ({ row }) => {
-        const student = row.original
+        const faculty = row.original
         return (
           <div className="space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                setSelectedStudent(student)
-                editForm.setValue("roll_number", student.roll_number)
-                editForm.setValue("first_name", student.first_name)
-                editForm.setValue("last_name", student.last_name)
-                editForm.setValue("email", student.email)
-                editForm.setValue("department_id", student.department_id)
-                editForm.setValue("batch_id", student.batch_id)
+                setSelectedFaculty(faculty)
+                editForm.setValue("first_name", faculty.first_name)
+                editForm.setValue("last_name", faculty.last_name)
+                editForm.setValue("email", faculty.email)
+                editForm.setValue("department_id", faculty.department_id)
+                editForm.setValue("designation", faculty.designation)
                 setIsEditDialogOpen(true)
               }}
             >
@@ -155,10 +121,10 @@ export default function StudentsPage() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => handleDelete(student.id)}
-              disabled={isDeleting === student.id}
+              onClick={() => handleDelete(faculty.id)}
+              disabled={isDeleting === faculty.id}
             >
-              {isDeleting === student.id && (
+              {isDeleting === faculty.id && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Delete
@@ -170,7 +136,7 @@ export default function StudentsPage() {
   ]
 
   const table = useReactTable({
-    data: students,
+    data: faculty,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -184,33 +150,31 @@ export default function StudentsPage() {
     },
   })
 
-  const addForm = useForm<z.infer<typeof studentSchema>>({
-    resolver: zodResolver(studentSchema),
+  const addForm = useForm({
+    resolver: zodResolver(facultySchema),
     defaultValues: {
-      roll_number: "",
       first_name: "",
       last_name: "",
       email: "",
       department_id: "",
-      batch_id: ""
+      designation: ""
     }
   })
 
-  const editForm = useForm<z.infer<typeof studentSchema>>({
-    resolver: zodResolver(studentSchema),
+  const editForm = useForm({
+    resolver: zodResolver(facultySchema),
     defaultValues: {
-      roll_number: selectedStudent?.roll_number || "",
-      first_name: selectedStudent?.first_name || "",
-      last_name: selectedStudent?.last_name || "",
-      email: selectedStudent?.email || "",
-      department_id: selectedStudent?.department_id || "",
-      batch_id: selectedStudent?.batch_id || ""
+      first_name: selectedFaculty?.first_name || "",
+      last_name: selectedFaculty?.last_name || "",
+      email: selectedFaculty?.email || "",
+      department_id: selectedFaculty?.department_id || "",
+      designation: selectedFaculty?.designation || ""
     }
   })
 
   const fetchDepartments = async () => {
     try {
-      const res = await fetch('/api/administration/students/get-departments')
+      const res = await fetch('/api/administration/faculty/get-departments')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setDepartments(data)
@@ -223,31 +187,16 @@ export default function StudentsPage() {
     }
   }
 
-  const fetchBatches = async () => {
+  const fetchFaculty = async () => {
     try {
-      const res = await fetch('/api/administration/students/get-batches')
+      const res = await fetch('/api/administration/faculty/get-faculty')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setBatches(data)
+      setFaculty(data)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch batches",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const fetchStudents = async () => {
-    try {
-      const res = await fetch('/api/administration/students/get-students')
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setStudents(data)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch students",
+        description: "Failed to fetch faculty",
         variant: "destructive"
       })
     } finally {
@@ -255,10 +204,10 @@ export default function StudentsPage() {
     }
   }
 
-  const onAddSubmit = async (values: z.infer<typeof studentSchema>) => {
+  const onAddSubmit = async (values) => {
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/students/add-student', {
+      const res = await fetch('/api/administration/faculty/add-faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values)
@@ -268,16 +217,16 @@ export default function StudentsPage() {
       
       toast({
         title: "Success",
-        description: "Student added successfully"
+        description: "Faculty added successfully"
       })
       setIsAddDialogOpen(false)
       setIsLoadingInitial(true)
       addForm.reset()
-      fetchStudents()
+      fetchFaculty()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add student",
+        description: "Failed to add faculty",
         variant: "destructive"
       })
     } finally {
@@ -286,16 +235,16 @@ export default function StudentsPage() {
     }
   }
 
-  const onEditSubmit = async (values: z.infer<typeof studentSchema>) => {
-    if (!selectedStudent) return
+  const onEditSubmit = async (values) => {
+    if (!selectedFaculty) return
 
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/students/edit-student', {
+      const res = await fetch('/api/administration/faculty/edit-faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          student_id: selectedStudent.id,
+          faculty_id: selectedFaculty.id,
           ...values
         })
       })
@@ -304,15 +253,15 @@ export default function StudentsPage() {
 
       toast({
         title: "Success",
-        description: "Student updated successfully"
+        description: "Faculty updated successfully"
       })
       setIsEditDialogOpen(false)
       editForm.reset()
-      fetchStudents()
+      fetchFaculty()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update student",
+        description: "Failed to update faculty",
         variant: "destructive"
       })
     } finally {
@@ -320,26 +269,26 @@ export default function StudentsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       setIsDeleting(id)
-      const res = await fetch('/api/administration/students/delete-student', {
+      const res = await fetch('/api/administration/faculty/delete-faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ student_id: id })
+        body: JSON.stringify({ faculty_id: id })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
       toast({
         title: "Success",
-        description: "Student deleted successfully"
+        description: "Faculty deleted successfully"
       })
-      fetchStudents()
+      fetchFaculty()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete student",
+        description: "Failed to delete faculty",
         variant: "destructive"
       })
     } finally {
@@ -349,8 +298,7 @@ export default function StudentsPage() {
 
   useEffect(() => {
     fetchDepartments()
-    fetchBatches()
-    fetchStudents()
+    fetchFaculty()
   }, [])
 
   if (isLoadingInitial) {
@@ -364,33 +312,20 @@ export default function StudentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-4xl font-pacifico text-sky-400">Students</h2>
+        <h2 className="text-4xl font-pacifico text-sky-400">Faculty</h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add Student</Button>
+            <Button>Add Faculty</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Student</DialogTitle>
+              <DialogTitle>Add New Faculty</DialogTitle>
               <DialogDescription>
-                Enter the details of the new student here.
+                Enter the details of the new faculty member here.
               </DialogDescription>
             </DialogHeader>
             <Form {...addForm}>
               <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="space-y-4">
-                <FormField
-                  control={addForm.control}
-                  name="roll_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Roll Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={addForm.control}
                   name="first_name"
@@ -456,24 +391,13 @@ export default function StudentsPage() {
                 />
                 <FormField
                   control={addForm.control}
-                  name="batch_id"
+                  name="designation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Batch</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a batch" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {batches.map((batch) => (
-                            <SelectItem key={batch.batch_id} value={batch.batch_id}>
-                              {batch.batch_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Designation</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -481,7 +405,7 @@ export default function StudentsPage() {
                 <DialogFooter>
                   <Button type="submit" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add Student
+                    Add Faculty
                   </Button>
                 </DialogFooter>
               </form>
@@ -493,8 +417,8 @@ export default function StudentsPage() {
       <div>
         <div className="flex items-center py-4">
           <Input
-            placeholder="Filter students..."
-            value={(table.getColumn("first_name")?.getFilterValue() as string) ?? ""}
+            placeholder="Filter faculty..."
+            value={table.getColumn("first_name")?.getFilterValue() ?? ""}
             onChange={(event) =>
               table.getColumn("first_name")?.setFilterValue(event.target.value)
             }
@@ -533,7 +457,7 @@ export default function StudentsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No students found.
+                    No faculty found.
                   </TableCell>
                 </TableRow>
               )}
@@ -563,26 +487,13 @@ export default function StudentsPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Student</DialogTitle>
+            <DialogTitle>Edit Faculty</DialogTitle>
             <DialogDescription>
-              Update the student details here.
+              Update the faculty details here.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="roll_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Roll Number</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={editForm.control}
                 name="first_name"
@@ -648,24 +559,13 @@ export default function StudentsPage() {
               />
               <FormField
                 control={editForm.control}
-                name="batch_id"
+                name="designation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Batch</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a batch" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {batches.map((batch) => (
-                          <SelectItem key={batch.batch_id} value={batch.batch_id}>
-                            {batch.batch_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Designation</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -673,7 +573,7 @@ export default function StudentsPage() {
               <DialogFooter>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Student
+                  Update Faculty
                 </Button>
               </DialogFooter>
             </form>

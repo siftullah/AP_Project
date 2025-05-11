@@ -1,27 +1,36 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function GET(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const prisma = new PrismaClient()
   
   try {
     // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
     }
-    const universityId = user?.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!(user?.publicMetadata['university_id'])) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get classroom_id and thread_type from URL
-    const { searchParams } = new URL(request.url)
-    const classroomId = searchParams.get('classroom_id')
-    const threadType = searchParams.get('thread_type')
+    const { classroom_id: classroomId, thread_type: threadType } = req.query
 
     if (!classroomId) {
-      return NextResponse.json({ error: 'Classroom ID is required' }, { status: 400 })
+      return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
     // Base where clause
@@ -92,14 +101,11 @@ export async function GET(request: NextRequest) {
     console.log(formattedThreads)
 
     await prisma.$disconnect()
-    return NextResponse.json(formattedThreads)
+    return res.json(formattedThreads)
 
   } catch (error) {
     console.error('Error in get-threads:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to fetch threads' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to fetch threads' })
   }
 }

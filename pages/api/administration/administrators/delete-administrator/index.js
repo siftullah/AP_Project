@@ -1,21 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser, clerkClient } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    const clerk_client = await clerkClient()
-    // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { auth_userId } = getAuth(req)
+
+    if (!auth_userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(auth_userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get details from request body
-    const { uniAdministrationId } = await request.json()
+    const { uniAdministrationId } = req.body
 
     // Get existing admin record
     const existingAdmin = await prisma.uniAdministration.findUnique({
@@ -24,7 +33,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!existingAdmin) {
-      return NextResponse.json({ error: 'Administrator not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Administrator not found' })
     }
 
     const userId = existingAdmin.user_id
@@ -83,19 +92,16 @@ export async function POST(request: NextRequest) {
     })
 
     // Delete user from Clerk
-    await clerk_client.users.deleteUser(userId)
+    await client.users.deleteUser(userId)
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.json({ 
       message: 'Administrator deleted successfully'
     })
 
   } catch (error) {
     console.error('Error in delete-administrator:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete administrator' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete administrator' })
   }
 }

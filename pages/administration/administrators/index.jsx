@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,37 +29,20 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
-interface Administrator {
-  administration_id: string
-  first_name: string
-  last_name: string
-  email: string
-  role_name: string
-  role_id: string
-}
-
-interface Role {
-  id: string
-  role: string
-}
-
 export default function AdminManagementPage() {
-  const [admins, setAdmins] = useState<Administrator[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
+  const [admins, setAdmins] = useState([])
+  const [roles, setRoles] = useState([])
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [deletingAdminId, setDeletingAdminId] = useState<string | null>(null)
+  const [deletingAdminId, setDeletingAdminId] = useState(null)
   const [newAdmin, setNewAdmin] = useState({
     firstName: '',
     lastName: '',
@@ -76,13 +57,13 @@ export default function AdminManagementPage() {
     roleId: '',
     roleName: ''
   })
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { toast } = useToast()
 
-  const columns: ColumnDef<Administrator>[] = [
+  const columns = [
     {
       id: "index",
       header: "#",
@@ -160,7 +141,7 @@ export default function AdminManagementPage() {
     try {
       const response = await fetch('/api/administration/administrators/get-roles')
       const data = await response.json()
-      setRoles(data.filter((role: Role) => role.role.toLowerCase() !== 'super admin'))
+      setRoles(data.filter((role) => role.role.toLowerCase() !== 'super admin'))
     } catch (error) {
       console.error('Error fetching roles:', error)
       toast({
@@ -188,7 +169,7 @@ export default function AdminManagementPage() {
     }
   }
 
-  const validateInputs = (admin: typeof newAdmin | typeof editAdmin) => {
+  const validateInputs = (admin) => {
     if (!admin.firstName.trim()) {
       toast({
         title: "Error",
@@ -268,7 +249,7 @@ export default function AdminManagementPage() {
     }
   }
 
-  const handleEditAdmin = (admin: Administrator) => {
+  const handleEditAdmin = (admin) => {
     setEditAdmin({
       uniAdministrationId: admin.administration_id,
       firstName: admin.first_name,
@@ -326,7 +307,7 @@ export default function AdminManagementPage() {
     }
   }
 
-  const handleDeleteAdmin = async (adminId: string) => {
+  const handleDeleteAdmin = async (adminId) => {
     setDeletingAdminId(adminId)
     try {
       const response = await fetch('/api/administration/administrators/delete-administrator', {
@@ -449,7 +430,7 @@ export default function AdminManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Admin</DialogTitle>
-              <DialogDescription>Update the administrator's details.</DialogDescription>
+              <DialogDescription>Update the administrator&apos;s details.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
@@ -520,7 +501,7 @@ export default function AdminManagementPage() {
         <div className="flex items-center py-4">
           <Input
             placeholder="Filter administrators..."
-            value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+            value={table.getColumn("email")?.getFilterValue() ?? ""}
             onChange={(event) =>
               table.getColumn("email")?.setFilterValue(event.target.value)
             }

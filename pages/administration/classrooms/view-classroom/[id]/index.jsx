@@ -1,10 +1,8 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, BookOpen, Users, GraduationCap, Building2, School } from 'lucide-react'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/router'
 import {
   Dialog,
   DialogContent,
@@ -16,61 +14,28 @@ import { Label } from "@/components/ui/label"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Check } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Students from './_components/Students'
-import Forum from './_components/Forum'
-
-interface ClassroomDetails {
-  classroom_id: string
-  classroom_name: string 
-  course_id: string
-  course_name: string
-  course_code: string
-  department_name: string
-  batch_id: string
-  batch_name: string
-  student_count: number
-}
-
-interface Teacher {
-  user_id: string
-  name: string
-  is_classroom_teacher: boolean
-  classroom_teacher_id?: string
-}
-
-interface TeachersByDepartment {
-  [department: string]: Teacher[]
-}
-
-interface Student {
-  user_id: string
-  name: string
-  is_classroom_teacher: boolean
-  classroom_teacher_id?: string
-}
-
-interface StudentsByDepartment {
-  [department: string]: Student[]
-}
+import Students from '@/components/Administration/view-classroom/Students'
+import Forum from '@/components/Administration/view-classroom/Forum'
 
 export default function ViewClassroomPage() {
-  const params = useParams()
   const router = useRouter()
-  const classroomId = params.id as string
+  const { id: classroomId } = router.query
 
-  const [classroom, setClassroom] = useState<ClassroomDetails | null>(null)
+  const [classroom, setClassroom] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [teachers, setTeachers] = useState<TeachersByDepartment>({})
-  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([])
-  const [teachingAssistants, setTeachingAssistants] = useState<StudentsByDepartment>({})
-  const [selectedTAs, setSelectedTAs] = useState<string[]>([])
+  const [error, setError] = useState(null)
+  const [teachers, setTeachers] = useState({})
+  const [selectedTeachers, setSelectedTeachers] = useState([])
+  const [teachingAssistants, setTeachingAssistants] = useState({})
+  const [selectedTAs, setSelectedTAs] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [taDialogOpen, setTaDialogOpen] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!classroomId) return
+
       try {
         const [classroomResponse, teachersResponse, tasResponse] = await Promise.all([
           fetch(`/api/administration/classrooms/view-classroom/get-classroom-details?classroom_id=${classroomId}`),
@@ -93,15 +58,15 @@ export default function ViewClassroomPage() {
         // Set initially selected teachers
         const initialSelectedTeachers = Object.values(teachersData.faculty_by_department)
           .flat()
-          .filter((teacher: Teacher) => teacher.is_classroom_teacher)
-          .map((teacher: Teacher) => teacher.user_id)
+          .filter(teacher => teacher.is_classroom_teacher)
+          .map(teacher => teacher.user_id)
         setSelectedTeachers(initialSelectedTeachers)
 
         // Set initially selected TAs
         const initialSelectedTAs = Object.values(tasData.students_by_department)
           .flat()
-          .filter((student: Student) => student.is_classroom_teacher)
-          .map((student: Student) => student.user_id)
+          .filter(student => student.is_classroom_teacher)
+          .map(student => student.user_id)
         setSelectedTAs(initialSelectedTAs)
 
       } catch (err) {
@@ -197,11 +162,11 @@ export default function ViewClassroomPage() {
 
   const currentTeachers = Object.values(teachers)
     .flat()
-    .filter((teacher: Teacher) => teacher.is_classroom_teacher)
+    .filter(teacher => teacher.is_classroom_teacher)
 
   const currentTAs = Object.values(teachingAssistants)
     .flat()
-    .filter((student: Student) => student.is_classroom_teacher)
+    .filter(student => student.is_classroom_teacher)
 
   return (
     <div className="container mx-auto p-6">
@@ -305,7 +270,7 @@ export default function ViewClassroomPage() {
                       <CommandEmpty>No teachers found.</CommandEmpty>
                       {Object.entries(teachers).map(([department, departmentTeachers]) => (
                         <CommandGroup key={department} heading={department}>
-                          {departmentTeachers.map((teacher: Teacher) => (
+                          {departmentTeachers.map(teacher => (
                             <CommandItem
                               key={teacher.user_id}
                               onSelect={() => {
@@ -338,7 +303,7 @@ export default function ViewClassroomPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4">
-                {currentTeachers.map((teacher: Teacher) => (
+                {currentTeachers.map(teacher => (
                   <div key={teacher.user_id} className="flex items-center gap-2 p-2 border rounded-lg">
                     <Users className="h-4 w-4 text-gray-500" />
                     <span>{teacher.name}</span>
@@ -370,7 +335,7 @@ export default function ViewClassroomPage() {
                       <CommandEmpty>No students found.</CommandEmpty>
                       {Object.entries(teachingAssistants).map(([department, students]) => (
                         <CommandGroup key={department} heading={department}>
-                          {students.map((student: Student) => (
+                          {students.map(student => (
                             <CommandItem
                               key={student.user_id}
                               onSelect={() => {
@@ -403,7 +368,7 @@ export default function ViewClassroomPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4">
-                {currentTAs.map((ta: Student) => (
+                {currentTAs.map(ta => (
                   <div key={ta.user_id} className="flex items-center gap-2 p-2 border rounded-lg">
                     <School className="h-4 w-4 text-gray-500" />
                     <span>{ta.name}</span>
@@ -428,13 +393,13 @@ export default function ViewClassroomPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="announcements">
-        <Forum classroomId={params.id.toString()} threadType="announcement" />
+          <Forum classroomId={classroomId} threadType="announcement" />
         </TabsContent>
         <TabsContent value="forum">
-        <Forum classroomId={params.id.toString()} threadType="general" />
+          <Forum classroomId={classroomId} threadType="general" />
         </TabsContent>
         <TabsContent value="students">
-          <Students classroomId={params.id.toString()} />
+          <Students classroomId={classroomId} />
         </TabsContent>
       </Tabs>
     </div>

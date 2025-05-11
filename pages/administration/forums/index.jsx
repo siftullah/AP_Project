@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,39 +21,18 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface Forum {
-  id: string
-  name: string
-  created_by: string
-  created_by_role: string
-  created_at: string
-  thread_count: number
-  last_thread_date: string | null
-  group_id: string | null
-  type: 'Public' | 'Private'
-  group_type: string | null
-  group_name: string | null
-}
-
-interface Group {
-  group_id: string
-  group_name: string
-  group_type: string
-  created_at: string
-}
-
 export default function ForumsPage() {
   const router = useRouter()
-  const [forums, setForums] = useState<Forum[]>([])
-  const [groups, setGroups] = useState<Group[]>([])
+  const [forums, setForums] = useState([])
+  const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(null)
 
   // New forum state
   const [newForumName, setNewForumName] = useState('')
-  const [forumType, setForumType] = useState<'Public' | 'Private'>('Public')
+  const [forumType, setForumType] = useState('Public')
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const [showNewForumDialog, setShowNewForumDialog] = useState(false)
 
@@ -152,7 +129,7 @@ export default function ForumsPage() {
     }
   }
 
-  const handleDeleteForum = async (forumId: string) => {
+  const handleDeleteForum = async (forumId) => {
     setIsDeleting(forumId)
     try {
       const response = await fetch('/api/administration/forums/delete-forum', {
@@ -221,7 +198,7 @@ export default function ForumsPage() {
               </div>
               <div>
                 <Label>Forum Type</Label>
-                <Select value={forumType} onValueChange={(value: 'Public' | 'Private') => setForumType(value)}>
+                <Select value={forumType} onValueChange={(value) => setForumType(value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>

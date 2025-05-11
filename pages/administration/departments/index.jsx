@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -41,44 +39,43 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
-const batchSchema = z.object({
-  name: z.string().min(1, "Batch name is required")
+const departmentSchema = z.object({
+  name: z.string().min(1, "Department name is required")
 })
 
-type Batch = {
-  id: string
-  name: string
-  student_count: number
-  classroom_count: number
-}
-
-export default function BatchesPage() {
+export default function DepartmentsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [batches, setBatches] = useState<Batch[]>([])
+  const [departments, setDepartments] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [selectedDepartment, setSelectedDepartment] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(null)
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
 
-  const columns: ColumnDef<Batch>[] = [
+  const columns = [
     {
       accessorKey: "name",
       header: "Name",
     },
     {
+      accessorKey: "faculty_count",
+      header: "Faculty",
+    },
+    {
       accessorKey: "student_count", 
       header: "Students",
+    },
+    {
+      accessorKey: "course_count",
+      header: "Courses",
     },
     {
       accessorKey: "classroom_count",
@@ -87,15 +84,15 @@ export default function BatchesPage() {
     {
       id: "actions",
       cell: ({ row }) => {
-        const batch = row.original
+        const dept = row.original
         return (
           <div className="space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                setSelectedBatch(batch)
-                editForm.setValue("name", batch.name)
+                setSelectedDepartment(dept)
+                editForm.setValue("name", dept.name)
                 setIsEditDialogOpen(true)
               }}
             >
@@ -104,10 +101,10 @@ export default function BatchesPage() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => handleDelete(batch.id)}
-              disabled={isDeleting === batch.id}
+              onClick={() => handleDelete(dept.id)}
+              disabled={isDeleting === dept.id}
             >
-              {isDeleting === batch.id && (
+              {isDeleting === dept.id && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Delete
@@ -119,7 +116,7 @@ export default function BatchesPage() {
   ]
 
   const table = useReactTable({
-    data: batches,
+    data: departments,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -133,30 +130,30 @@ export default function BatchesPage() {
     },
   })
 
-  const addForm = useForm<z.infer<typeof batchSchema>>({
-    resolver: zodResolver(batchSchema),
+  const addForm = useForm({
+    resolver: zodResolver(departmentSchema),
     defaultValues: {
       name: ""
     }
   })
 
-  const editForm = useForm<z.infer<typeof batchSchema>>({
-    resolver: zodResolver(batchSchema),
+  const editForm = useForm({
+    resolver: zodResolver(departmentSchema),
     defaultValues: {
-      name: selectedBatch?.name || ""
+      name: selectedDepartment?.name || ""
     }
   })
 
-  const fetchBatches = async () => {
+  const fetchDepartments = async () => {
     try {
-      const res = await fetch('/api/administration/batches/get-batches')
+      const res = await fetch('/api/administration/departments/get-departments')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setBatches(data)
+      setDepartments(data)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch batches",
+        description: "Failed to fetch departments",
         variant: "destructive"
       })
     } finally {
@@ -164,10 +161,10 @@ export default function BatchesPage() {
     }
   }
 
-  const onAddSubmit = async (values: z.infer<typeof batchSchema>) => {
+  const onAddSubmit = async (values) => {
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/batches/add-batch', {
+      const res = await fetch('/api/administration/departments/add-department', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values)
@@ -177,15 +174,15 @@ export default function BatchesPage() {
       
       toast({
         title: "Success",
-        description: "Batch added successfully"
+        description: "Department added successfully"
       })
       setIsAddDialogOpen(false)
       addForm.reset()
-      fetchBatches()
+      fetchDepartments()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add batch",
+        description: "Failed to add department",
         variant: "destructive"
       })
     } finally {
@@ -193,17 +190,17 @@ export default function BatchesPage() {
     }
   }
 
-  const onEditSubmit = async (values: z.infer<typeof batchSchema>) => {
-    if (!selectedBatch) return
+  const onEditSubmit = async (values) => {
+    if (!selectedDepartment) return
 
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/batches/edit-batch', {
+      const res = await fetch('/api/administration/departments/edit-department', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          batch_id: selectedBatch.id,
-          batch_name: values.name
+          department_id: selectedDepartment.id,
+          department_name: values.name
         })
       })
       const data = await res.json()
@@ -211,15 +208,15 @@ export default function BatchesPage() {
 
       toast({
         title: "Success",
-        description: "Batch updated successfully"
+        description: "Department updated successfully"
       })
       setIsEditDialogOpen(false)
       editForm.reset()
-      fetchBatches()
+      fetchDepartments()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update batch",
+        description: "Failed to update department",
         variant: "destructive"
       })
     } finally {
@@ -227,26 +224,26 @@ export default function BatchesPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       setIsDeleting(id)
-      const res = await fetch('/api/administration/batches/delete-batch', {
+      const res = await fetch('/api/administration/departments/delete-department', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batch_id: id })
+        body: JSON.stringify({ department_id: id })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
       toast({
         title: "Success",
-        description: "Batch deleted successfully"
+        description: "Department deleted successfully"
       })
-      fetchBatches()
+      fetchDepartments()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete batch",
+        description: "Failed to delete department",
         variant: "destructive"
       })
     } finally {
@@ -255,7 +252,7 @@ export default function BatchesPage() {
   }
 
   useEffect(() => {
-    fetchBatches()
+    fetchDepartments()
   }, [])
 
   if (isLoadingInitial) {
@@ -269,16 +266,16 @@ export default function BatchesPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-4xl font-pacifico text-sky-400">Batches</h2>
+        <h2 className="text-4xl font-pacifico text-sky-400">Departments</h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add Batch</Button>
+            <Button>Add Department</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Batch</DialogTitle>
+              <DialogTitle>Add New Department</DialogTitle>
               <DialogDescription>
-                Enter the details of the new batch here.
+                Enter the details of the new department here.
               </DialogDescription>
             </DialogHeader>
             <Form {...addForm}>
@@ -299,7 +296,7 @@ export default function BatchesPage() {
                 <DialogFooter>
                   <Button type="submit" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add Batch
+                    Add Department
                   </Button>
                 </DialogFooter>
               </form>
@@ -311,8 +308,8 @@ export default function BatchesPage() {
       <div>
         <div className="flex items-center py-4">
           <Input
-            placeholder="Filter batches..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            placeholder="Filter departments..."
+            value={table.getColumn("name")?.getFilterValue() ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
@@ -351,7 +348,7 @@ export default function BatchesPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No batches found.
+                    No departments found.
                   </TableCell>
                 </TableRow>
               )}
@@ -381,9 +378,9 @@ export default function BatchesPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Batch</DialogTitle>
+            <DialogTitle>Edit Department</DialogTitle>
             <DialogDescription>
-              Update the batch details here.
+              Update the department details here.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -404,7 +401,7 @@ export default function BatchesPage() {
               <DialogFooter>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Batch
+                  Update Department
                 </Button>
               </DialogFooter>
             </form>

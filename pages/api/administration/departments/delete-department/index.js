@@ -1,22 +1,29 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser,clerkClient } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
     }
-    const universityId = user.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get department_id from request body
-    const { department_id } = await request.json()
+    const { department_id } = req.body
 
     // Get existing department
     const existingDepartment = await prisma.department.findUnique({
@@ -24,7 +31,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!existingDepartment) {
-      return NextResponse.json({ error: 'Department not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Department not found' })
     }
 
     // Delete all related records in transaction
@@ -191,24 +198,21 @@ export async function POST(request: NextRequest) {
       await tx.department.delete({
         where: { id: department_id }
       })
-const clerk_client = await clerkClient()
+
       // Delete users from Clerk after all DB records are cleaned
       for (const userId of userIds) {
-        await clerk_client.users.deleteUser(userId)
+        await client.users.deleteUser(userId)
       }
     })
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.status(200).json({ 
       message: 'Department deleted successfully'
     })
 
   } catch (error) {
     console.error('Error in delete-department:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete department' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete department' })
   }
 }

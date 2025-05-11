@@ -1,22 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser, clerkClient } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    const clerk_client = await clerkClient()
-    // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get details from request body
-    const { firstName, lastName, emailAddress, roleId } = await request.json()
+    const { firstName, lastName, emailAddress, roleId } = req.body
 
     // Get role details
     const role = await prisma.uniAdministrationRoles.findUnique({
@@ -25,19 +34,19 @@ export async function POST(request: NextRequest) {
     })
 
     if (!role) {
-      return NextResponse.json({ error: 'Role not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Role not found' })
     }
 
     // Check if role is Super Admin
     if (role.role.toLowerCase() === 'super admin') {
-      return NextResponse.json({ error: 'Cannot create Super Admin' }, { status: 403 })
+      return res.status(403).json({ error: 'Cannot create Super Admin' })
     }
 
     // Generate random 8 digit password
     const password = randomBytes(4).toString('hex')
 
     // Create Clerk user
-    const clerkUser = await clerk_client.users.createUser({
+    const clerkUser = await client.users.createUser({
       firstName,
       lastName,
       emailAddress: [emailAddress],
@@ -65,7 +74,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Update Clerk user metadata with administration_id
-    await clerk_client.users.updateUserMetadata(clerkUser.id, {
+    await client.users.updateUserMetadata(clerkUser.id, {
       publicMetadata: {
         role: 'admin',
         university_id: universityId,
@@ -74,16 +83,13 @@ export async function POST(request: NextRequest) {
     })
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.json({ 
       message: 'Administrator created successfully'
     })
 
   } catch (error) {
     console.error('Error in add-administrator:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to create administrator' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to create administrator' })
   }
 }

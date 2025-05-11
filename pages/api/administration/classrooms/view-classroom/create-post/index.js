@@ -1,46 +1,50 @@
-export const dynamic = 'force-dynamic';
-
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
+    }
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
 
     // Get request body
-    const body = await request.json()
-    const { threadId, description } = body
+    const { threadId, description } = req.body
 
     if (!threadId || !description) {
-      return NextResponse.json({ error: 'Thread ID and description are required' }, { status: 400 })
+      return res.status(400).json({ error: 'Thread ID and description are required' })
     }
 
     // Create new post
     const post = await prisma.classroomPost.create({
       data: {
         thread_id: threadId,
-        user_id: user.id,
+        user_id: userId,
         type: 'reply',
         description: description
       }
     })
 
     await prisma.$disconnect()
-    return NextResponse.json(post)
+    return res.json(post)
 
   } catch (error) {
     console.error('Error in create-post:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to create post' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to create post' })
   }
 }

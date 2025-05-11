@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,44 +21,28 @@ import {
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 import { format } from "date-fns"
 
-interface Permission {
-  id: string
-  permission: string
-}
-
-interface Role {
-  id: string
-  role: string
-  permissions: Permission[]
-  createdAt: Date
-  university_id: string
-}
-
 export default function RolesPage() {
-  const [roles, setRoles] = useState<Role[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [newRole, setNewRole] = useState<{ role: string, permissions: string[] }>({ role: '', permissions: [] })
-  const [editingRole, setEditingRole] = useState<Role | null>(null)
+  const [roles, setRoles] = useState([])
+  const [permissions, setPermissions] = useState([])
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
+  const [newRole, setNewRole] = useState({ role: '', permissions: [] })
+  const [editingRole, setEditingRole] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  const handleEdit = (role: Role) => {
+  const handleEdit = (role) => {
     setEditingRole({
       ...role,
       permissions: role.permissions.map(p => ({
@@ -71,7 +53,7 @@ export default function RolesPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       await fetch('/api/administration/roles/delete-role', {
         method: 'DELETE',
@@ -92,7 +74,7 @@ export default function RolesPage() {
     }
   }
 
-  const columns: ColumnDef<Role>[] = [
+  const columns = [
     {
       id: "index",
       header: "#",
@@ -106,7 +88,7 @@ export default function RolesPage() {
       accessorKey: "permissions",
       header: "Permissions",
       cell: ({ row }) => {
-        const permissions = row.getValue("permissions") as Permission[]
+        const permissions = row.getValue("permissions")
         return permissions.map(p => p.permission).join(", ")
       }
     },
@@ -192,7 +174,7 @@ export default function RolesPage() {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target
     if (editingRole) {
       setEditingRole({ ...editingRole, [name]: value })
@@ -201,7 +183,7 @@ export default function RolesPage() {
     }
   }
 
-  const handlePermissionChange = (permissionId: string) => {
+  const handlePermissionChange = (permissionId) => {
     if (editingRole) {
       const updatedPermissions = editingRole.permissions.some(p => p.id === permissionId)
         ? editingRole.permissions.filter(p => p.id !== permissionId)
@@ -221,7 +203,7 @@ export default function RolesPage() {
     }
   }
 
-  const validateRole = (role: string, permissions: string[] | Permission[]) => {
+  const validateRole = (role, permissions) => {
     if (!role.trim()) {
       toast({
         title: "Validation Error",
@@ -360,7 +342,7 @@ export default function RolesPage() {
             </svg>
             <Input
               placeholder="Filter roles..."
-              value={(table.getColumn("role")?.getFilterValue() as string) ?? ""}
+              value={table.getColumn("role")?.getFilterValue() ?? ""}
               onChange={(event) =>
                 table.getColumn("role")?.setFilterValue(event.target.value)
               }

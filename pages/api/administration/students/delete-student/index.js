@@ -1,21 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser, clerkClient } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'DELETE') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
-  const clerk_client = await clerkClient()
   
   try {
     // Get current user and verify university_id
-    const user = await currentUser()
-    if (!user?.publicMetadata['university_id']) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get student_id from request body
-    const { student_id } = await request.json()
+    const { student_id } = req.body
 
     // Get existing student with user details
     const existingStudent = await prisma.student.findUnique({
@@ -24,7 +34,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!existingStudent) {
-      return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Student not found' })
     }
 
     // Delete all related records in transaction
@@ -121,19 +131,16 @@ export async function POST(request: NextRequest) {
     })
 
     // Delete Clerk user
-    await clerk_client.users.deleteUser(existingStudent.user_id)
+    await client.users.deleteUser(existingStudent.user_id)
 
     await prisma.$disconnect()
-    return NextResponse.json({ 
+    return res.status(200).json({ 
       message: 'Student deleted successfully'
     })
 
   } catch (error) {
     console.error('Error in delete-student:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete student' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete student' })
   }
 }

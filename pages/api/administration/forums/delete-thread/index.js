@@ -1,33 +1,42 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function DELETE(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'DELETE') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
+    // Get current user and verify university_id
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
     }
-    const universityId = user?.publicMetadata['university_id'] as string
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
 
-    // Get thread_id from URL params
-    const { searchParams } = new URL(request.url)
-    const threadId = searchParams.get('thread_id')
+    if (!(user?.publicMetadata['university_id'])) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
-    if (!threadId) {
-      return NextResponse.json({ error: 'Thread ID is required' }, { status: 400 })
+    // Get thread_id from query params
+    const { thread_id } = req.query
+
+    if (!thread_id) {
+      return res.status(400).json({ error: 'Thread ID is required' })
     }
 
     // Delete all post attachments for all posts in the thread
     await prisma.threadPostAttachments.deleteMany({
       where: {
         post: {
-          thread_id: threadId
+          thread_id: thread_id
         }
       }
     })
@@ -35,27 +44,24 @@ export async function DELETE(request: NextRequest) {
     // Delete all posts in the thread
     await prisma.threadPost.deleteMany({
       where: {
-        thread_id: threadId
+        thread_id: thread_id
       }
     })
 
     // Delete the thread
     const deletedThread = await prisma.thread.delete({
       where: {
-        id: threadId,
+        id: thread_id,
         university_id: universityId
       }
     })
 
     await prisma.$disconnect()
-    return NextResponse.json(deletedThread)
+    return res.status(200).json(deletedThread)
 
   } catch (error) {
     console.error('Error in delete-thread:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete thread' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete thread' })
   }
 }

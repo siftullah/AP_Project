@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -38,122 +36,89 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
-const classroomSchema = z.object({
-  name: z.string().min(1, "Classroom name is required"),
-  course_id: z.string().min(1, "Course is required"),
-  batch_id: z.string().min(1, "Batch is required"),
-  classroom_id: z.string().nullable()
+const studentSchema = z.object({
+  roll_number: z.string().min(1, "Roll number is required"),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"), 
+  email: z.string().email("Invalid email address"),
+  department_id: z.string().min(1, "Department is required"),
+  batch_id: z.string().min(1, "Batch is required")
 })
 
-type Classroom = {
-  classroom_id: string
-  classroom_name: string
-  course_code: string
-  course_name: string
-  department_name: string
-  batch_name: string
-  teachers: string[]
-  student_count: number
-  course_id: string
-  batch_id: string
-}
-
-type Department = {
-  department_name: string
-  courses: {
-    course_id: string
-    course_name: string
-    course_code: string
-  }[]
-}
-
-type Batch = {
-  batch_id: string
-  batch_name: string
-}
-
-export default function ClassroomsPage() {
+export default function StudentsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [classrooms, setClassrooms] = useState<Classroom[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [batches, setBatches] = useState<Batch[]>([])
+  const [students, setStudents] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [batches, setBatches] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [selectedStudent, setSelectedStudent] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(null)
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
 
-  const columns: ColumnDef<Classroom>[] = [
+  const columns = [
     {
-      accessorKey: "classroom_name",
-      header: "Classroom Name",
+      accessorKey: "roll_number",
+      header: "Roll Number",
     },
     {
-      accessorKey: "course",
-      header: "Course",
-      cell: ({ row }) => `${row.original.course_code} - ${row.original.course_name}`
+      accessorKey: "first_name", 
+      header: "First Name",
     },
     {
-      accessorKey: "department_name", 
+      accessorKey: "last_name",
+      header: "Last Name",
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+    },
+    {
+      accessorKey: "department",
       header: "Department",
     },
     {
-      accessorKey: "batch_name",
+      accessorKey: "batch",
       header: "Batch",
     },
     {
-      accessorKey: "teachers",
-      header: "Teachers",
-      cell: ({ row }) => row.original.teachers.join(", ")
-    },
-    {
-      accessorKey: "student_count",
-      header: "Total Students",
+      accessorKey: "enrolled_courses_count",
+      header: "Enrolled Courses",
     },
     {
       id: "actions",
       cell: ({ row }) => {
-        const classroom = row.original
+        const student = row.original
         return (
           <div className="space-x-2">
-                        <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/administration/classrooms/view-classroom/${classroom.classroom_id}`)}
-            >
-              View
-            </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                setSelectedClassroom(classroom)
-                editForm.setValue("name", classroom.classroom_name)
-                editForm.setValue("classroom_id", classroom.classroom_id)
-                editForm.setValue("course_id", classroom.course_id)
-                editForm.setValue("batch_id", classroom.batch_id)
+                setSelectedStudent(student)
+                editForm.setValue("roll_number", student.roll_number)
+                editForm.setValue("first_name", student.first_name)
+                editForm.setValue("last_name", student.last_name)
+                editForm.setValue("email", student.email)
+                editForm.setValue("department_id", student.department_id)
+                editForm.setValue("batch_id", student.batch_id)
                 setIsEditDialogOpen(true)
               }}
             >
@@ -162,15 +127,14 @@ export default function ClassroomsPage() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => handleDelete(classroom.classroom_id)}
-              disabled={isDeleting === classroom.classroom_id}
+              onClick={() => handleDelete(student.id)}
+              disabled={isDeleting === student.id}
             >
-              {isDeleting === classroom.classroom_id && (
+              {isDeleting === student.id && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Delete
             </Button>
-
           </div>
         )
       }
@@ -178,7 +142,7 @@ export default function ClassroomsPage() {
   ]
 
   const table = useReactTable({
-    data: classrooms,
+    data: students,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -192,36 +156,40 @@ export default function ClassroomsPage() {
     },
   })
 
-  const addForm = useForm<z.infer<typeof classroomSchema>>({
-    resolver: zodResolver(classroomSchema),
+  const addForm = useForm({
+    resolver: zodResolver(studentSchema),
     defaultValues: {
-      classroom_id: "",
-      name: "",
-      course_id: "",
+      roll_number: "",
+      first_name: "",
+      last_name: "",
+      email: "",
+      department_id: "",
       batch_id: ""
     }
   })
 
-  const editForm = useForm<z.infer<typeof classroomSchema>>({
-    resolver: zodResolver(classroomSchema),
+  const editForm = useForm({
+    resolver: zodResolver(studentSchema),
     defaultValues: {
-      name: selectedClassroom?.classroom_name || "",
-      course_id: selectedClassroom?.course_id || "",
-      batch_id: selectedClassroom?.batch_id || "",
-      classroom_id: selectedClassroom?.classroom_id || ""
+      roll_number: selectedStudent?.roll_number || "",
+      first_name: selectedStudent?.first_name || "",
+      last_name: selectedStudent?.last_name || "",
+      email: selectedStudent?.email || "",
+      department_id: selectedStudent?.department_id || "",
+      batch_id: selectedStudent?.batch_id || ""
     }
   })
 
-  const fetchCourses = async () => {
+  const fetchDepartments = async () => {
     try {
-      const res = await fetch('/api/administration/classrooms/get-courses')
+      const res = await fetch('/api/administration/students/get-departments')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setDepartments(data)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch courses",
+        description: "Failed to fetch departments",
         variant: "destructive"
       })
     }
@@ -229,7 +197,7 @@ export default function ClassroomsPage() {
 
   const fetchBatches = async () => {
     try {
-      const res = await fetch('/api/administration/classrooms/get-batches')
+      const res = await fetch('/api/administration/students/get-batches')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setBatches(data)
@@ -242,16 +210,16 @@ export default function ClassroomsPage() {
     }
   }
 
-  const fetchClassrooms = async () => {
+  const fetchStudents = async () => {
     try {
-      const res = await fetch('/api/administration/classrooms/get-classrooms')
+      const res = await fetch('/api/administration/students/get-students')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setClassrooms(data)
+      setStudents(data)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch classrooms",
+        description: "Failed to fetch students",
         variant: "destructive"
       })
     } finally {
@@ -259,10 +227,10 @@ export default function ClassroomsPage() {
     }
   }
 
-  const onAddSubmit = async (values: z.infer<typeof classroomSchema>) => {
+  const onAddSubmit = async (values) => {
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/classrooms/add-classroom', {
+      const res = await fetch('/api/administration/students/add-student', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values)
@@ -272,16 +240,16 @@ export default function ClassroomsPage() {
       
       toast({
         title: "Success",
-        description: "Classroom added successfully"
+        description: "Student added successfully"
       })
       setIsAddDialogOpen(false)
       setIsLoadingInitial(true)
       addForm.reset()
-      fetchClassrooms()
+      fetchStudents()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add classroom",
+        description: "Failed to add student",
         variant: "destructive"
       })
     } finally {
@@ -290,15 +258,16 @@ export default function ClassroomsPage() {
     }
   }
 
-  const onEditSubmit = async (values: z.infer<typeof classroomSchema>) => {
-    if (!selectedClassroom) return
+  const onEditSubmit = async (values) => {
+    if (!selectedStudent) return
 
     try {
       setIsLoading(true)
-      const res = await fetch('/api/administration/classrooms/edit-classroom', {
+      const res = await fetch('/api/administration/students/edit-student', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          student_id: selectedStudent.id,
           ...values
         })
       })
@@ -307,15 +276,15 @@ export default function ClassroomsPage() {
 
       toast({
         title: "Success",
-        description: "Classroom updated successfully"
+        description: "Student updated successfully"
       })
       setIsEditDialogOpen(false)
       editForm.reset()
-      fetchClassrooms()
+      fetchStudents()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update classroom",
+        description: "Failed to update student",
         variant: "destructive"
       })
     } finally {
@@ -323,26 +292,26 @@ export default function ClassroomsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       setIsDeleting(id)
-      const res = await fetch('/api/administration/classrooms/delete-classroom', {
+      const res = await fetch('/api/administration/students/delete-student', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classroom_id: id })
+        body: JSON.stringify({ student_id: id })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
       toast({
         title: "Success",
-        description: "Classroom deleted successfully"
+        description: "Student deleted successfully"
       })
-      fetchClassrooms()
+      fetchStudents()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete classroom",
+        description: "Failed to delete student",
         variant: "destructive"
       })
     } finally {
@@ -351,9 +320,9 @@ export default function ClassroomsPage() {
   }
 
   useEffect(() => {
-    fetchCourses()
+    fetchDepartments()
     fetchBatches()
-    fetchClassrooms()
+    fetchStudents()
   }, [])
 
   if (isLoadingInitial) {
@@ -367,28 +336,28 @@ export default function ClassroomsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-4xl font-pacifico text-sky-400">Classrooms</h2>
+        <h2 className="text-4xl font-pacifico text-sky-400">Students</h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add Classroom</Button>
+            <Button>Add Student</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Classroom</DialogTitle>
+              <DialogTitle>Add New Student</DialogTitle>
               <DialogDescription>
-                Enter the details of the new classroom here.
+                Enter the details of the new student here.
               </DialogDescription>
             </DialogHeader>
             <Form {...addForm}>
               <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="space-y-4">
                 <FormField
                   control={addForm.control}
-                  name="name"
+                  name="roll_number"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Classroom Name</FormLabel>
+                      <FormLabel>Roll Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter classroom name" {...field} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -396,28 +365,60 @@ export default function ClassroomsPage() {
                 />
                 <FormField
                   control={addForm.control}
-                  name="course_id"
+                  name="first_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Course</FormLabel>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={addForm.control}
+                  name="last_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={addForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={addForm.control}
+                  name="department_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a course" />
+                            <SelectValue placeholder="Select a department" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="max-h-[300px]">
-                          {departments.map((dept) => (
-                            dept.courses.length > 0 && (
-                              <SelectGroup key={dept.department_name}>
-                                <SelectLabel>{dept.department_name}</SelectLabel>
-                                {dept.courses.map((course) => (
-                                  <SelectItem key={course.course_id} value={course.course_id}>
-                                    {course.course_code} - {course.course_name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            )
+                        <SelectContent>
+                          {departments.map((department) => (
+                            <SelectItem key={department.department_id} value={department.department_id}>
+                              {department.department_name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -452,7 +453,7 @@ export default function ClassroomsPage() {
                 <DialogFooter>
                   <Button type="submit" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add Classroom
+                    Add Student
                   </Button>
                 </DialogFooter>
               </form>
@@ -464,10 +465,10 @@ export default function ClassroomsPage() {
       <div>
         <div className="flex items-center py-4">
           <Input
-            placeholder="Filter classrooms..."
-            value={(table.getColumn("classroom_name")?.getFilterValue() as string) ?? ""}
+            placeholder="Filter students..."
+            value={(table.getColumn("first_name")?.getFilterValue() ?? "")}
             onChange={(event) =>
-              table.getColumn("classroom_name")?.setFilterValue(event.target.value)
+              table.getColumn("first_name")?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
           />
@@ -504,7 +505,7 @@ export default function ClassroomsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No classrooms found.
+                    No students found.
                   </TableCell>
                 </TableRow>
               )}
@@ -534,21 +535,21 @@ export default function ClassroomsPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Classroom</DialogTitle>
+            <DialogTitle>Edit Student</DialogTitle>
             <DialogDescription>
-              Update the classroom details here.
+              Update the student details here.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
               <FormField
                 control={editForm.control}
-                name="name"
+                name="roll_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Classroom Name</FormLabel>
+                    <FormLabel>Roll Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter classroom name" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -556,28 +557,60 @@ export default function ClassroomsPage() {
               />
               <FormField
                 control={editForm.control}
-                name="course_id"
+                name="first_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Course</FormLabel>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="department_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a course" />
+                          <SelectValue placeholder="Select a department" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="max-h-[300px]">
-                        {departments.map((dept) => (
-                          dept.courses.length > 0 && (
-                            <SelectGroup key={dept.department_name}>
-                              <SelectLabel>{dept.department_name}</SelectLabel>
-                              {dept.courses.map((course) => (
-                                <SelectItem key={course.course_id} value={course.course_id}>
-                                  {course.course_code} - {course.course_name}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          )
+                      <SelectContent>
+                        {departments.map((department) => (
+                          <SelectItem key={department.department_id} value={department.department_id}>
+                            {department.department_name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -612,7 +645,7 @@ export default function ClassroomsPage() {
               <DialogFooter>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Classroom
+                  Update Student
                 </Button>
               </DialogFooter>
             </form>

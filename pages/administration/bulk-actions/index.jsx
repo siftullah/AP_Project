@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,15 +14,15 @@ import {
 } from "@/components/ui/select"
 
 export default function BulkActionsPage() {
-  const [file, setFile] = useState<File | null>(null)
-  const [headers, setHeaders] = useState<{name: string, index: number}[]>([])
-  const [selectedAction, setSelectedAction] = useState<string>("")
-  const [columnMappings, setColumnMappings] = useState<{[key: string]: number}>({})
-  const [failedRows, setFailedRows] = useState<any[]>([])
+  const [file, setFile] = useState(null)
+  const [headers, setHeaders] = useState([])
+  const [selectedAction, setSelectedAction] = useState("")
+  const [columnMappings, setColumnMappings] = useState({})
+  const [failedRows, setFailedRows] = useState([])
   const [showFailedRows, setShowFailedRows] = useState(false)
   const { toast } = useToast()
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e) => {
     if (e.target.files) {
       setFile(e.target.files[0])
       setHeaders([])
@@ -35,7 +33,7 @@ export default function BulkActionsPage() {
     }
   }
 
-  const handleUpload = async (action: string) => {
+  const handleUpload = async (action) => {
     if (!file) {
       toast({
         title: "No file selected",
@@ -48,11 +46,11 @@ export default function BulkActionsPage() {
     try {
       const reader = new FileReader()
       reader.onload = (e) => {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer)
+        const data = new Uint8Array(e.target.result)
         const workbook = XLSX.read(data, { type: 'array' })
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
-        const headerRow = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] as string[]
+        const headerRow = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0]
         const headersWithIndex = headerRow.map((header, index) => ({
           name: header,
           index
@@ -83,7 +81,7 @@ export default function BulkActionsPage() {
       formData.append('file', file)
       formData.append('mappings', JSON.stringify(columnMappings))
 
-      const apiEndpoints: { [key: string]: string } = {
+      const apiEndpoints = {
         "Teacher registration": "/api/administration/bulk-actions/create-teachers",
         "Student registration": "/api/administration/bulk-actions/create-students",
         "Classroom creation": "/api/administration/bulk-actions/create-classrooms",
@@ -141,7 +139,7 @@ export default function BulkActionsPage() {
   }
 
   const renderMappingForm = () => {
-    const requiredFields: { [key: string]: string[] } = {
+    const requiredFields = {
       "Teacher registration": ["First Name", "Last Name", "Email", "Department", "Designation"],
       "Student registration": ["Roll No", "First Name", "Last Name", "Email", "Department", "Batch"],
       "Classroom creation": ["Classroom Name", "Course Name", "Course Code", "Department", "Batch", "Teacher Email"],
@@ -221,7 +219,7 @@ export default function BulkActionsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {failedRows.map((row, idx) => (
                 <tr key={idx}>
-                  {Object.values(row).map((value: any, cellIdx) => (
+                  {Object.values(row).map((value, cellIdx) => (
                     <td key={cellIdx} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {value}
                     </td>

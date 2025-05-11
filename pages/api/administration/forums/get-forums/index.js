@@ -1,28 +1,37 @@
-export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function GET(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found' }, { status: 401 })
-    }
-    const universityId = user?.publicMetadata['university_id'] as string
+    // Get current user and verify university_id
+    const { userId } = getAuth(req);
 
-    // Get forum_id from URL if provided
-    const { searchParams } = new URL(request.url)
-    const forumId = searchParams.get('forum_id')
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
+    }
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!(user?.publicMetadata['university_id'])) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
+
+    // Get forum_id from query params if provided
+    const { forum_id } = req.query
 
     // Base where clause
     const whereClause = {
       university_id: universityId,
-      ...(forumId && { id: forumId })
+      ...(forum_id && { id: forum_id })
     }
 
     const forums = await prisma.forum.findMany({
@@ -87,14 +96,11 @@ export async function GET(request: NextRequest) {
     }))
 
     await prisma.$disconnect()
-    return NextResponse.json(formattedForums)
+    return res.json(formattedForums)
 
   } catch (error) {
     console.error('Error in get-forums:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to fetch forums' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to fetch forums' })
   }
 }

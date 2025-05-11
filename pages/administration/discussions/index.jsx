@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,7 +26,7 @@ const initialDiscussions = [
 export default function DiscussionsPage() {
   const [discussions, setDiscussions] = useState(initialDiscussions)
   const [filter, setFilter] = useState('all')
-  const [selectedDiscussion, setSelectedDiscussion] = useState<typeof initialDiscussions[0] | null>(null)
+  const [selectedDiscussion, setSelectedDiscussion] = useState(null)
   const [newDiscussion, setNewDiscussion] = useState({ title: '', type: '', content: '' })
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { toast } = useToast()
@@ -37,12 +35,12 @@ export default function DiscussionsPage() {
     ? discussions 
     : discussions.filter(d => d.type.toLowerCase() === filter)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target
     setNewDiscussion({ ...newDiscussion, [name]: value })
   }
 
-  const handleSelectChange = (value: string) => {
+  const handleSelectChange = (value) => {
     setNewDiscussion({ ...newDiscussion, type: value })
   }
 
@@ -63,7 +61,7 @@ export default function DiscussionsPage() {
     })
   }
 
-  const handleDeleteDiscussion = (id: number) => {
+  const handleDeleteDiscussion = (id) => {
     setDiscussions(discussions.filter(d => d.id !== id))
     toast({
       title: "Discussion removed",
@@ -194,4 +192,3 @@ export default function DiscussionsPage() {
     </div>
   )
 }
-

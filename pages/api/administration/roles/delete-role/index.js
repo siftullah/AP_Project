@@ -1,20 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { currentUser } from '@clerk/nextjs/server'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
 import { PrismaClient } from '@prisma/client'
 
-export async function DELETE(request: NextRequest) {
+export default async function handler(req, res) {
+  if (req.method !== 'DELETE') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
-    const user = await currentUser()
-    if (!(user?.publicMetadata['university_id'])) {
-      return NextResponse.json({ error: 'University ID of authenticated user not found'  }, { status: 401 })
+    // Get current user and verify university_id
+    const { userId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" })
     }
-    const universityId = user?.publicMetadata['university_id'] as string
+
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    if (!user?.publicMetadata['university_id']) {
+      return res.status(401).json({ error: 'University ID of authenticated user not found' })
+    }
+    const universityId = user.publicMetadata['university_id']
 
     // Get role id from request body
-    const { id } = await request.json()
+    const { id } = req.body
 
     // Get role details
     const role = await prisma.uniAdministrationRoles.findUnique({
@@ -23,12 +34,12 @@ export async function DELETE(request: NextRequest) {
     })
 
     if (!role) {
-      return NextResponse.json({ error: 'Role not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Role not found' })
     }
 
     // Check if role is Super Admin or Disabled
     if (role.role === 'Super Admin' || role.role === 'Disabled') {
-      return NextResponse.json({ success: false })
+      return res.status(200).json({ success: false })
     }
 
     // Get disabled role
@@ -40,7 +51,7 @@ export async function DELETE(request: NextRequest) {
     })
 
     if (!disabledRole) {
-      return NextResponse.json({ error: 'Disabled role not found' }, { status: 404 })
+      return res.status(404).json({ error: 'Disabled role not found' })
     }
 
     // Update all uni administrations with this role to disabled role
@@ -68,14 +79,11 @@ export async function DELETE(request: NextRequest) {
     })
 
     await prisma.$disconnect()
-    return NextResponse.json({ success: true })
+    return res.status(200).json({ success: true })
 
   } catch (error) {
     console.error('Error in delete-role:', error)
     await prisma.$disconnect()
-    return NextResponse.json(
-      { error: 'Failed to delete role' },
-      { status: 500 }
-    )
+    return res.status(500).json({ error: 'Failed to delete role' })
   }
 }

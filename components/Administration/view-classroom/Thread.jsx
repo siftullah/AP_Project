@@ -1,63 +1,32 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, MessageCircle, Calendar, User, Clock, ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/router'
 import { Textarea } from '@/components/ui/textarea'
 
-interface Thread {
-  thread_id: string
-  thread_title: string
-  main_post_description: string | null
-  created_at: string
-  created_by_user_name: string | null
-  total_posts: number
-  last_post_created_at: string | null
-}
-
-interface Post {
-  post_id: string
-  description: string
-  created_at: string
-  created_by: {
-    name: string
-    role: string
-  }
-  attachments: {
-    id: string
-    filename: string
-    filepath: string
-  }[]
-}
-
-export default function ThreadPostsPage() {
-  const params = useParams()
+export default function Thread({ classroomId, threadId }) {
   const router = useRouter()
-  const forumId = params.id as string
-  const threadId = params.thread_id as string
-
-  const [thread, setThread] = useState<Thread | null>(null)
-  const [posts, setPosts] = useState<Post[]>([])
+  const [thread, setThread] = useState(null)
+  const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
   const [replyContent, setReplyContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [editingPostId, setEditingPostId] = useState<string | null>(null)
+  const [editingPostId, setEditingPostId] = useState(null)
   const [editContent, setEditContent] = useState('')
   const [editingThread, setEditingThread] = useState(false)
   const [editThreadTitle, setEditThreadTitle] = useState('')
   const [isSavingThread, setIsSavingThread] = useState(false)
   const [isSavingPost, setIsSavingPost] = useState(false)
   const [isDeletingThread, setIsDeletingThread] = useState(false)
-  const [isDeletingPost, setIsDeletingPost] = useState<string | null>(null)
+  const [isDeletingPost, setIsDeletingPost] = useState(null)
 
   const fetchThreadAndPosts = async () => {
     try {
       // Fetch thread details
-      const threadResponse = await fetch(`/api/administration/forums/get-threads?forum_id=${forumId}&thread_id=${threadId}`)
+      const threadResponse = await fetch(`/api/administration/classrooms/view-classroom/get-threads?classroom_id=${classroomId}&thread_id=${threadId}`)
       if (!threadResponse.ok) {
         throw new Error('Failed to fetch thread details')
       }
@@ -65,7 +34,7 @@ export default function ThreadPostsPage() {
       setThread(threadData[0])
 
       // Fetch posts
-      const postsResponse = await fetch(`/api/administration/forums/get-posts?thread_id=${threadId}`)
+      const postsResponse = await fetch(`/api/administration/classrooms/view-classroom/get-posts?thread_id=${threadId}`)
       if (!postsResponse.ok) {
         throw new Error('Failed to fetch posts')
       }
@@ -80,14 +49,14 @@ export default function ThreadPostsPage() {
 
   useEffect(() => {
     fetchThreadAndPosts()
-  }, [forumId, threadId])
+  }, [classroomId, threadId])
 
   const handleSubmitReply = async () => {
     if (!replyContent.trim()) return
 
     setIsSubmitting(true)
     try {
-      const response = await fetch('/api/administration/forums/create-post', {
+      const response = await fetch('/api/administration/classrooms/view-classroom/create-post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,10 +71,7 @@ export default function ThreadPostsPage() {
         throw new Error('Failed to post reply')
       }
 
-      // Refresh thread and posts data
       await fetchThreadAndPosts()
-      
-      // Clear the textarea
       setReplyContent('')
     } catch (err) {
       console.error('Error posting reply:', err)
@@ -115,12 +81,12 @@ export default function ThreadPostsPage() {
     }
   }
 
-  const handleEditPost = async (postId: string) => {
+  const handleEditPost = async (postId) => {
     if (!editContent.trim()) return
 
     setIsSavingPost(true)
     try {
-      const response = await fetch('/api/administration/forums/edit-post', {
+      const response = await fetch('/api/administration/classrooms/view-classroom/edit-post', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -135,10 +101,7 @@ export default function ThreadPostsPage() {
         throw new Error('Failed to edit post')
       }
 
-      // Refresh thread and posts data
       await fetchThreadAndPosts()
-      
-      // Reset edit state
       setEditingPostId(null)
       setEditContent('')
     } catch (err) {
@@ -149,12 +112,12 @@ export default function ThreadPostsPage() {
     }
   }
 
-  const handleDeletePost = async (postId: string) => {
+  const handleDeletePost = async (postId) => {
     if (!confirm('Are you sure you want to delete this post?')) return
 
     setIsDeletingPost(postId)
     try {
-      const response = await fetch(`/api/administration/forums/delete-post?post_id=${postId}`, {
+      const response = await fetch(`/api/administration/classrooms/view-classroom/delete-post?post_id=${postId}`, {
         method: 'DELETE',
       })
 
@@ -162,7 +125,6 @@ export default function ThreadPostsPage() {
         throw new Error('Failed to delete post')
       }
 
-      // Refresh thread and posts data
       await fetchThreadAndPosts()
     } catch (err) {
       console.error('Error deleting post:', err)
@@ -177,7 +139,7 @@ export default function ThreadPostsPage() {
 
     setIsSavingThread(true)
     try {
-      const response = await fetch('/api/administration/forums/edit-thread', {
+      const response = await fetch('/api/administration/classrooms/view-classroom/edit-thread', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -192,10 +154,7 @@ export default function ThreadPostsPage() {
         throw new Error('Failed to edit thread')
       }
 
-      // Refresh thread data
       await fetchThreadAndPosts()
-      
-      // Reset edit state
       setEditingThread(false)
       setEditThreadTitle('')
     } catch (err) {
@@ -207,11 +166,11 @@ export default function ThreadPostsPage() {
   }
 
   const handleDeleteThread = async () => {
-    if (!confirm('Are you sure you want to delete this thread? This will delete all posts in the thread.')) return
+    if (!confirm('Are you sure you want to delete this thread?')) return
 
     setIsDeletingThread(true)
     try {
-      const response = await fetch(`/api/administration/forums/delete-thread?thread_id=${threadId}`, {
+      const response = await fetch(`/api/administration/classrooms/view-classroom/delete-thread?thread_id=${threadId}`, {
         method: 'DELETE',
       })
 
@@ -219,8 +178,7 @@ export default function ThreadPostsPage() {
         throw new Error('Failed to delete thread')
       }
 
-      // Redirect back to forum page
-      router.push(`/administration/forums/${forumId}`)
+      router.push(`/administration/classrooms/view-classroom/${classroomId}`)
     } catch (err) {
       console.error('Error deleting thread:', err)
       setError(err instanceof Error ? err.message : 'Failed to delete thread')
@@ -246,15 +204,7 @@ export default function ThreadPostsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <Button
-        variant="outline"
-        className="mb-6"
-        onClick={() => router.push(`/administration/forums/${forumId}`)}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Threads
-      </Button>
+    <div className="container mx-auto">
 
       {/* Thread Details Card */}
       <Card className="w-full mb-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
@@ -347,111 +297,85 @@ export default function ThreadPostsPage() {
 
       <div className="space-y-4">
         {posts.map((post) => (
-          <Card 
-            key={post.post_id} 
-            className="w-full shadow-md hover:shadow-lg transition-all duration-200"
-          >
+          <Card key={post.post_id} className="w-full">
             <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center text-gray-600">
-                      <User className="h-4 w-4 mr-2" />
-                      <span>{post.created_by.name} ({post.created_by.role})</span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span>{formatDistanceToNow(new Date(post.created_at))} ago</span>
-                    </div>
+              {editingPostId === post.post_id ? (
+                <div>
+                  <Textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="mb-2"
+                    placeholder="Edit your post..."
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handleEditPost(post.post_id)}
+                      disabled={!editContent.trim() || isSavingPost}
+                    >
+                      {isSavingPost ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save'
+                      )}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setEditingPostId(null)
+                        setEditContent('')
+                      }}
+                      disabled={isSavingPost}
+                    >
+                      Cancel
+                    </Button>
                   </div>
-                  {editingPostId === post.post_id ? (
-                    <div>
-                      <Textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className="min-h-[100px] mb-2"
-                      />
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => handleEditPost(post.post_id)}
-                          disabled={!editContent.trim() || isSavingPost}
-                        >
-                          {isSavingPost ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Saving...
-                            </>
-                          ) : (
-                            'Save'
-                          )}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => {
-                            setEditingPostId(null)
-                            setEditContent('')
-                          }}
-                          disabled={isSavingPost}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-gray-600 mb-4">{post.description}</p>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="hover:bg-green-50"
-                          onClick={() => {
-                            setEditingPostId(post.post_id)
-                            setEditContent(post.description)
-                          }}
-                        >
-                          <Pencil className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeletePost(post.post_id)}
-                          disabled={isDeletingPost === post.post_id}
-                        >
-                          {isDeletingPost === post.post_id ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                              Deleting...
-                            </>
-                          ) : (
-                            <>
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                  {post.attachments.length > 0 && (
-                    <div className="border-t pt-4 mt-4">
-                      <h4 className="font-semibold mb-2">Attachments:</h4>
-                      <ul className="list-disc pl-5">
-                        {post.attachments.map(attachment => (
-                          <li key={attachment.id}>
-                            <a href={attachment.filepath} className="text-blue-600 hover:underline">
-                              {attachment.filename}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
-              </div>
+              ) : (
+                <>
+                  <p className="mb-4">{post.description}</p>
+                  <div className="text-sm text-gray-600">
+                    <p>Posted by: {post.created_by.name} ({post.created_by.role})</p>
+                    <p>{formatDistanceToNow(new Date(post.created_at))} ago</p>
+                  </div>
+                </>
+              )}
             </CardContent>
+            <CardFooter className="flex justify-end gap-2 bg-gray-50">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="hover:bg-green-50"
+                onClick={() => {
+                  setEditingPostId(post.post_id)
+                  setEditContent(post.description)
+                }}
+              >
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-red-600 hover:bg-red-50"
+                onClick={() => handleDeletePost(post.post_id)}
+                disabled={isDeletingPost === post.post_id}
+              >
+                {isDeletingPost === post.post_id ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </CardFooter>
           </Card>
         ))}
       </div>
