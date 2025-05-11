@@ -66,7 +66,8 @@ export default function DashboardPage() {
       try {
         const response = await fetch('/api/administration/get-stats')
         if (!response.ok) {
-          throw new Error('Failed to fetch stats')
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to fetch stats')
         }
         const data = await response.json()
         setStats(data)

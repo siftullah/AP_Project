@@ -1,16 +1,25 @@
-import { currentUser } from '@clerk/nextjs/server'
-import { PrismaClient } from '@prisma/client'
+import { getAuth, clerkClient } from '@clerk/nextjs/server'
+import { prisma } from "@/lib/prisma";
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const prisma = new PrismaClient()
-  
   try {
-    // Get current user and verify university_id
-    const user = await currentUser()
+    // Get current user using getAuth for Pages Router
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthenticated User" });
+    }
+
+  // Initialize the Backend SDK
+  const client = await clerkClient()
+
+  // Get the user's full `Backend User` object
+  const user = await client.users.getUser(userId)
+
     if (!user?.publicMetadata['university_id']) {
       return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
@@ -107,9 +116,10 @@ export default async function handler(req, res) {
       { name: "Total Posts", value: postCount, icon: "MessageSquare", color: "text-cyan-500", bgColor: "bg-cyan-50" }
     ])
 
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching stats:', error)
     await prisma.$disconnect()
-    return res.status(500).json({ error: 'Failed to fetch stats' })
+    return res.status(500).json({ error: error.message || 'Failed to fetch stats' })
   }
 }
