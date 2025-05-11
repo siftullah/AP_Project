@@ -4,26 +4,11 @@ import React from "react";
 import { ClassCard } from "./_components/ClassCard";
 import { ClassSkeleton } from "./_components/ClassSkeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { BookOpen } from "lucide-react";
 import StudentLayout from "@/components/layouts/StudentLayout";
 
-const fetchClassrooms = async () => {
-  const { data } = await axios.get("/api/student/classes");
-  return data;
-};
-
-const Home = () => {
-  const {
-    data: classroomData,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["classrooms"],
-    queryFn: fetchClassrooms,
-  });
-
+const Home = ({ classroomData, isError, errorMessage }) => {
   return (
     <div className="bg-gradient-to-b from-blue-50 via-blue-50/50 to-white px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
       <motion.div
@@ -52,23 +37,13 @@ const Home = () => {
               Unable to load classes
             </h3>
             <p className="text-red-600">
-              Please try again later or contact support.
+              {errorMessage || "Please try again later or contact support."}
             </p>
           </motion.div>
         )}
 
         <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              <ClassSkeleton count={6} />
-            </motion.div>
-          ) : classroomData && classroomData.length > 0 ? (
+          {classroomData && classroomData.length > 0 ? (
             <motion.div
               key="classes"
               className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
@@ -117,6 +92,41 @@ const Home = () => {
     </div>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { req } = context;
+
+  try {
+    // Fetch classrooms using axios from the server
+    const response = await axios.get(
+      "http://localhost:3000/api/student/classes",
+      {
+        headers: {
+          // Forward the authentication cookie from the request
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        classroomData: response.data || [],
+        isError: false,
+        errorMessage: null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching classes:", error);
+
+    return {
+      props: {
+        classroomData: [],
+        isError: true,
+        errorMessage: error.response?.data?.error || "Failed to fetch classes",
+      },
+    };
+  }
+}
 
 Home.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
