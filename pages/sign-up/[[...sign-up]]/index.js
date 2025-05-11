@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useSignUp } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import Head from "next/head";
+import Image from "next/image";
 
 const SignUpPage = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -208,10 +209,12 @@ const SignUpPage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <img
+                <Image
                   src="/fyp-logo.png"
                   alt="EduAssist"
                   className="h-10 w-auto"
+                  width={100}
+                  height={100}
                 />
               </Link>
             </div>

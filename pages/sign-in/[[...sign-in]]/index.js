@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useSignIn } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import Head from "next/head";
+import Image from "next/image";
 
 const SignInPage = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -59,7 +60,6 @@ const SignInPage = () => {
 
         if (result.status === "complete") {
           await setActive({ session: result.createdSessionId });
-          router.push("/"); // Redirect to home after successful sign-in
         } else {
           console.error("Sign in failed", result);
         }
@@ -91,10 +91,12 @@ const SignInPage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <img
+                <Image
                   src="/fyp-logo.png"
                   alt="EduAssist"
                   className="h-10 w-auto"
+                  width={100}
+                  height={100}
                 />
               </Link>
             </div>
