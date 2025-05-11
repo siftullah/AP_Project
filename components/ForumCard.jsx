@@ -1,4 +1,3 @@
-"use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,26 +22,6 @@ const ForumCard = ({ forums }) => {
     });
   };
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4 },
-    },
-  };
-
   if (!forums || forums.length === 0) {
     return (
       <div className="bg-blue-50 p-6 border border-blue-100 rounded-lg text-center">
@@ -53,13 +32,12 @@ const ForumCard = ({ forums }) => {
 
   return (
     <motion.div
-      variants={containerVariants}
       initial="hidden"
       animate="visible"
       className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
     >
       {forums.map((forum) => (
-        <motion.div key={forum.id} variants={itemVariants}>
+        <motion.div key={forum.id}>
           <Link href={`${basePath}/${forum.id}`}>
             <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.2 }}>
               <Card className="bg-white shadow-sm hover:shadow-md border-blue-100 h-full overflow-hidden transition-all">
