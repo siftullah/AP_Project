@@ -13,45 +13,36 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Plus } from "lucide-react";
 import { motion } from "framer-motion";
-import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import StudentLayout from "@/components/layouts/StudentLayout";
-
-// Axios function to create a new post
-const createPost = async (classId, payload) => {
-  try {
-    const { data } = await axios.post(
-      `/api/student/classes/${classId}/create-post`,
-      payload
-    );
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || "Failed to create post");
-    }
-    throw error;
-  }
-};
 
 const CreateClassPost = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { classID } = router.query;
 
-  // Create mutation hook
-  const { mutate, isPending } = useMutation({
-    mutationFn: (payload) => createPost(router.query.classID, payload),
-    onSuccess: () => {
-      router.push(`/student/classes/${router.query.classID}`);
-    },
-    onError: (error) => {
+  // Function to create a new post
+  const submitPost = async (postData) => {
+    setIsSubmitting(true);
+
+    try {
+      await axios.post(`/api/student/classes/${classID}/create-post`, postData);
+
+      // Redirect to class page on success
+      router.push(`/student/classes/${classID}`);
+    } catch (error) {
       console.error("Error creating post:", error);
-    },
-  });
+      alert(error.response?.data?.error || "Failed to create post");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    mutate({ title, description });
+    submitPost({ title, description });
   };
 
   return (
@@ -134,10 +125,11 @@ const CreateClassPost = () => {
               >
                 <Button
                   type="submit"
+                  onClick={handleSubmit}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={isPending}
+                  disabled={isSubmitting}
                 >
-                  {isPending ? (
+                  {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
                       <span>Creating...</span>

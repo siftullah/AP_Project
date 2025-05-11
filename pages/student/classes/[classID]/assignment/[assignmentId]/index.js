@@ -25,121 +25,70 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Loader from "./_components/Loader";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import StudentLayout from "@/components/layouts/StudentLayout";
 
-// Axios function to fetch assignment details
-const fetchAssignmentDetails = async (assignmentId) => {
-  try {
-    const { data } = await axios.get(
-      `/api/student/assignments/${assignmentId}`
-    );
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.error || "Failed to fetch assignment details"
-      );
-    }
-    throw error;
-  }
-};
-
-const AssignmentPage = () => {
+const AssignmentPage = ({ assignmentData, error }) => {
   const [uploadFiles, setUploadFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const { classID, assignmentId } = router.query;
 
-  // Query hook for fetching assignment details
-  const {
-    data: assignmentData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["assignmentDetails", router.query.assignmentId],
-    queryFn: () => fetchAssignmentDetails(router.query.assignmentId),
-  });
+  // Function to submit assignment
+  const submitAssignment = async () => {
+    setIsSubmitting(true);
 
-  // Mutation hook for submitting assignment
-  const { mutate: submitAssignment, isPending: isSubmitting } = useMutation({
-    mutationFn: async () => {
+    try {
       // Simulate upload progress
       let progress = 0;
-      const updateProgress = () => {
+      const progressInterval = setInterval(() => {
         progress += 5;
         setUploadProgress(progress);
-        if (progress < 100) {
-          setTimeout(updateProgress, 100);
+        if (progress >= 100) {
+          clearInterval(progressInterval);
         }
-      };
-
-      updateProgress();
+      }, 100);
 
       // Simulate API call completion after "upload" completes
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(true);
-        }, 2000);
-      });
-    },
-    onSuccess: () => {
-      // Update local data to reflect submission
-      if (assignmentData) {
-        queryClient.setQueryData(
-          ["assignmentDetails", router.query.assignmentId],
-          {
-            ...assignmentData,
-            assignment: {
-              ...assignmentData.assignment,
-              submittedOn: new Date().toISOString(),
-              attachments: uploadFiles.map((file, index) => ({
-                id: `temp-${index}`,
-                filename: file.name,
-                filepath: URL.createObjectURL(file),
-              })),
-            },
-          }
-        );
-      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // In a real implementation, we would send data to the API here
+      // await axios.post(`/api/student/assignments/${assignmentId}/submit`, formData);
+
+      // Refresh the page to get updated data
+      router.replace(router.asPath);
 
       setUploadFiles([]);
       setUploadProgress(0);
-    },
-    onError: (error) => {
+    } catch (error) {
       console.error("Failed to submit assignment:", error);
       setUploadProgress(0);
-    },
-  });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-  // Mutation hook for deleting submission
-  const { mutate: deleteSubmission, isPending: isDeleting } = useMutation({
-    mutationFn: async () => {
+  // Function to delete submission
+  const deleteSubmission = async () => {
+    setIsDeleting(true);
+
+    try {
       // Simulate API call
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(true);
-        }, 1000);
-      });
-    },
-    onSuccess: () => {
-      // Update local data to reflect deletion
-      if (assignmentData) {
-        queryClient.setQueryData(["assignmentDetails", params.assignmentId], {
-          ...assignmentData,
-          assignment: {
-            ...assignmentData.assignment,
-            submittedOn: undefined,
-            attachments: [],
-          },
-        });
-      }
-    },
-    onError: (error) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // In a real implementation, we would send delete request to the API here
+      // await axios.delete(`/api/student/assignments/${assignmentId}/submission`);
+
+      // Refresh the page to get updated data
+      router.replace(router.asPath);
+    } catch (error) {
       console.error("Failed to delete submission:", error);
-    },
-  });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -231,15 +180,38 @@ const AssignmentPage = () => {
     deleteSubmission();
   };
 
-  if (isLoading) {
+  if (!assignmentData && !error) {
     return <Loader />;
   }
 
   if (error) {
-  }
-
-  if (!assignmentData) {
-    notFound();
+    return (
+      <div className="bg-gradient-to-b from-blue-50 via-blue-50/30 to-white px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mb-4 text-black-700">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="mx-auto w-16 h-16"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm1-7a1 1 0 11-2 0 1 1 0 012 0zm-1 3a1 1 0 100 2 1 1 0 000-2z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h3 className="mb-2 font-semibold text-black-900 text-xl">{error}</h3>
+          <Button
+            onClick={() => router.push(`/student/classes/${classID}`)}
+            className="bg-blue-600 hover:bg-blue-700 mt-4"
+          >
+            Return to Class
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const submissionStatus = getSubmissionStatus();
@@ -640,6 +612,42 @@ const AssignmentPage = () => {
     </div>
   );
 };
+
+// Use getServerSideProps to fetch data on the server side
+export async function getServerSideProps(context) {
+  const { classID, assignmentId } = context.params;
+  const { req } = context;
+
+  try {
+    // Fetch assignment details using axios from the server
+    const response = await axios.get(
+      `http://localhost:3000/api/student/assignments/${assignmentId}`,
+      {
+        headers: {
+          // Forward the authentication cookie from the request
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        assignmentData: response.data,
+        error: null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching assignment details:", error);
+
+    return {
+      props: {
+        assignmentData: null,
+        error:
+          error.response?.data?.error || "Failed to fetch assignment details",
+      },
+    };
+  }
+}
 
 AssignmentPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 

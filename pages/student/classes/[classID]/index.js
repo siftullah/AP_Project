@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,41 +9,14 @@ import AssignmentCard from "@/pages/student/classes/_components/AssignmentCard";
 import DiscussionCard from "@/pages/student/classes/_components/DiscussionCard";
 import Loader from "@/pages/student/classes/_components/Loader";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import StudentLayout from "@/components/layouts/StudentLayout";
 
-// Custom fetch function using Axios
-const fetchClassDetails = async (classId) => {
-  try {
-    const { data } = await axios.get(`/api/student/classes/${classId}`);
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.error || "Failed to fetch class details"
-      );
-    }
-    throw error;
-  }
-};
-
-const ClassPage = () => {
+const ClassPage = ({ classData, error }) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
-  console.log(router.query);
 
-  // Fetch class details using TanStack Query
-  const {
-    data: classData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["classDetails", router.query.classID],
-    queryFn: () => fetchClassDetails(router.query.classID),
-  });
-
-  if (isLoading) {
+  if (!classData && !error) {
     return <Loader />;
   }
 
@@ -69,11 +41,7 @@ const ClassPage = () => {
             />
           </svg>
         </div>
-        <h3 className="mb-2 font-semibold text-black-900 text-xl">
-          {error instanceof Error
-            ? error.message
-            : "Unable to load class details. Please try again later."}
-        </h3>
+        <h3 className="mb-2 font-semibold text-black-900 text-xl">{error}</h3>
         <Button
           onClick={() => router.push("/student/classes")}
           className="bg-blue-600 hover:bg-blue-700 mt-4"
@@ -82,10 +50,6 @@ const ClassPage = () => {
         </Button>
       </motion.div>
     );
-  }
-
-  if (!classData) {
-    notFound();
   }
 
   return (
@@ -297,6 +261,42 @@ const ClassPage = () => {
   );
 };
 
+// Use getServerSideProps to fetch data on the server side
+export async function getServerSideProps(context) {
+  const { classID } = context.params;
+  const { req } = context;
+
+  try {
+    // Fetch class details using axios from the server
+    const response = await axios.get(
+      `http://localhost:3000/api/student/classes/${classID}`,
+      {
+        headers: {
+          // Forward the authentication cookie from the request
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        classData: response.data,
+        error: null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching class details:", error);
+
+    return {
+      props: {
+        classData: null,
+        error: error.response?.data?.error || "Failed to fetch class details",
+      },
+    };
+  }
+}
+
+// Set the layout for this page
 ClassPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default ClassPage;

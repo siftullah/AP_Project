@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,87 +14,74 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import Loader from "./_components/Loader";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import StudentLayout from "@/components/layouts/StudentLayout";
 
-// Axios function to fetch thread details
-const fetchThreadDetails = async (classId, threadId) => {
-  try {
-    const { data } = await axios.get(
-      `/api/student/classes/${classId}/${threadId}`
-    );
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.error || "Failed to fetch thread details"
-      );
-    }
-    throw error;
-  }
-};
-
-// Axios function to post a reply
-const postReply = async (classId, threadId, payload) => {
-  try {
-    const { data } = await axios.post(
-      `/api/student/classes/${classId}/${threadId}/post-reply`,
-      payload
-    );
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || "Failed to post reply");
-    }
-    throw error;
-  }
-};
-
-const ThreadPage = () => {
+const ThreadPage = ({ threadData, error }) => {
   const [reply, setReply] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const { classID, threadID } = router.query;
 
-  // Query hook for fetching thread details
-  const {
-    data: threadData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["threadDetails", router.query.classID, router.query.threadID],
-    queryFn: () =>
-      fetchThreadDetails(router.query.classID, router.query.threadID),
-  });
+  // Function to post a reply
+  const submitReply = async (replyText) => {
+    if (!replyText.trim()) return;
 
-  // Mutation hook for posting a reply
-  const { mutate, isPending: isSubmitting } = useMutation({
-    mutationFn: (replyText) =>
-      postReply(router.query.classID, router.query.threadID, {
-        reply: replyText,
-      }),
-    onSuccess: () => {
+    setIsSubmitting(true);
+
+    try {
+      await axios.post(
+        `/api/student/classes/${classID}/${threadID}/post-reply`,
+        {
+          reply: replyText,
+        }
+      );
+
       setReply("");
-      // Invalidate and refetch thread data
-      queryClient.invalidateQueries({
-        queryKey: [
-          "threadDetails",
-          router.query.classID,
-          router.query.threadID,
-        ],
-      });
-    },
-    onError: (error) => {
+      // Refresh the page to get updated data
+      router.replace(router.asPath);
+    } catch (error) {
       console.error("Failed to post reply:", error);
-    },
-  });
+      alert(error.response?.data?.error || "Failed to post reply");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-  if (isLoading) {
+  if (!threadData && !error) {
     return <Loader />;
   }
 
-  if (!threadData) {
-    notFound();
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-8 text-center"
+      >
+        <div className="mb-4 text-black-700">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="mx-auto w-16 h-16"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm1-7a1 1 0 11-2 0 1 1 0 012 0zm-1 3a1 1 0 100 2 1 1 0 000-2z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+        <h3 className="mb-2 font-semibold text-black-900 text-xl">{error}</h3>
+        <Button
+          onClick={() => router.push(`/student/classes/${classID}`)}
+          className="bg-blue-600 hover:bg-blue-700 mt-4"
+        >
+          Return to Class
+        </Button>
+      </motion.div>
+    );
   }
 
   const formatDate = (dateString) => {
@@ -126,12 +112,7 @@ const ThreadPage = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    if (!reply.trim()) {
-      return;
-    }
-
-    mutate(reply);
+    submitReply(reply);
   };
 
   return (
@@ -359,6 +340,42 @@ const ThreadPage = () => {
   );
 };
 
+// Use getServerSideProps to fetch data on the server side
+export async function getServerSideProps(context) {
+  const { classID, threadID } = context.params;
+  const { req } = context;
+
+  try {
+    // Fetch thread details using axios from the server
+    const response = await axios.get(
+      `http://localhost:3000/api/student/classes/${classID}/${threadID}`,
+      {
+        headers: {
+          // Forward the authentication cookie from the request
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        threadData: response.data,
+        error: null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching thread details:", error);
+
+    return {
+      props: {
+        threadData: null,
+        error: error.response?.data?.error || "Failed to fetch thread details",
+      },
+    };
+  }
+}
+
+// Set the layout for this page
 ThreadPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default ThreadPage;
