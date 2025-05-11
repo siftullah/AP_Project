@@ -197,7 +197,9 @@ const ClassPage = () => {
             >
               <Button
                 onClick={() =>
-                  router.push(`/student/classes/${params.classID}/create-post`)
+                  router.push(
+                    `/student/classes/${router.query.classID}/create-post`
+                  )
                 }
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >

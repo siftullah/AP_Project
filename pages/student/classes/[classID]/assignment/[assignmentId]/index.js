@@ -87,18 +87,21 @@ const AssignmentPage = () => {
     onSuccess: () => {
       // Update local data to reflect submission
       if (assignmentData) {
-        queryClient.setQueryData(["assignmentDetails", params.assignmentId], {
-          ...assignmentData,
-          assignment: {
-            ...assignmentData.assignment,
-            submittedOn: new Date().toISOString(),
-            attachments: uploadFiles.map((file, index) => ({
-              id: `temp-${index}`,
-              filename: file.name,
-              filepath: URL.createObjectURL(file),
-            })),
-          },
-        });
+        queryClient.setQueryData(
+          ["assignmentDetails", router.query.assignmentId],
+          {
+            ...assignmentData,
+            assignment: {
+              ...assignmentData.assignment,
+              submittedOn: new Date().toISOString(),
+              attachments: uploadFiles.map((file, index) => ({
+                id: `temp-${index}`,
+                filename: file.name,
+                filepath: URL.createObjectURL(file),
+              })),
+            },
+          }
+        );
       }
 
       setUploadFiles([]);

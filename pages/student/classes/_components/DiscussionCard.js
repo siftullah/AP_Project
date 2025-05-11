@@ -10,32 +10,11 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Discussion } from "@/app/types/classroom";
 import { motion } from "framer-motion";
 import { MessageSquare, Users, ChevronRight } from "lucide-react";
 
-const DiscussionCard = ({ discussions }: { discussions: Discussion[] }) => {
+const DiscussionCard = ({ discussions }) => {
   const pathname = usePathname();
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4 },
-    },
-  };
 
   if (discussions.length === 0) {
     return (
@@ -50,15 +29,10 @@ const DiscussionCard = ({ discussions }: { discussions: Discussion[] }) => {
   }
 
   return (
-    <motion.div
-      className="space-y-4"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <motion.div className="space-y-4" initial="hidden" animate="visible">
       {discussions.map((discussion) => {
         return (
-          <motion.div key={discussion.id} variants={itemVariants}>
+          <motion.div key={discussion.id}>
             <Link href={`${pathname}/${discussion.id}`}>
               <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
                 <Card className="bg-white shadow-sm hover:shadow-md border-blue-100 overflow-hidden transition-all">

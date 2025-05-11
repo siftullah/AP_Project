@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import type { Assignment } from "@/app/types/classroom";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -20,10 +19,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const AssignmentCard = ({ assignments }: { assignments: Assignment[] }) => {
+const AssignmentCard = ({ assignments }) => {
   const pathname = usePathname();
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
@@ -35,37 +34,14 @@ const AssignmentCard = ({ assignments }: { assignments: Assignment[] }) => {
     });
   };
 
-  const getSubmissionStatus = (assignmentId: string) => {
+  const getSubmissionStatus = (assignmentId) => {
     const marks = assignments.find((a) => a.id === assignmentId)?.assignment
       ?.marks;
     if (!marks) return "pending";
     return "submitted";
   };
 
-  const getDueStatus = (dueDate?: string) => {
-    if (!dueDate) return "no-due-date";
-
-    const now = new Date();
-    const due = new Date(dueDate);
-
-    if (due < now) {
-      return "overdue";
-    }
-
-    // Due in less than 24 hours
-    const hoursLeft = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
-    if (hoursLeft < 24) {
-      return "due-soon";
-    }
-
-    return "upcoming";
-  };
-
-  const renderStatusBadge = (
-    status: string | null,
-    totalMarks?: number,
-    marks?: number
-  ) => {
+  const renderStatusBadge = (status, totalMarks, marks) => {
     switch (status) {
       case "pending":
         return (
@@ -84,61 +60,6 @@ const AssignmentCard = ({ assignments }: { assignments: Assignment[] }) => {
     }
   };
 
-  const renderDueStatusBadge = (dueStatus: string, dueDate?: string) => {
-    switch (dueStatus) {
-      case "overdue":
-        return (
-          <Badge variant="destructive" className="flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" /> Overdue
-          </Badge>
-        );
-      case "due-soon":
-        return (
-          <Badge
-            variant="default"
-            className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600"
-          >
-            <Clock className="w-3 h-3" /> Due Soon
-          </Badge>
-        );
-      case "upcoming":
-        return (
-          <Badge
-            variant="outline"
-            className="flex items-center gap-1 border-blue-200 text-black-700"
-          >
-            <Calendar className="w-3 h-3" /> Due: {formatDate(dueDate)}
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline" className="border-blue-200 text-black-700">
-            No Due Date
-          </Badge>
-        );
-    }
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4 },
-    },
-  };
-
   if (assignments.length === 0) {
     return (
       <motion.div
@@ -152,18 +73,12 @@ const AssignmentCard = ({ assignments }: { assignments: Assignment[] }) => {
   }
 
   return (
-    <motion.div
-      className="space-y-4"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <motion.div className="space-y-4" initial="hidden" animate="visible">
       {assignments.map((thread) => {
         const status = getSubmissionStatus(thread.id);
-        const dueStatus = getDueStatus(thread?.assignment?.dueDate);
 
         return (
-          <motion.div key={thread.id} variants={itemVariants}>
+          <motion.div key={thread.id}>
             <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
               <Card className="bg-white shadow-sm hover:shadow-md border-blue-100 overflow-hidden transition-all">
                 <div className="bg-gradient-to-r from-blue-700 to-blue-600 h-1"></div>
@@ -187,12 +102,6 @@ const AssignmentCard = ({ assignments }: { assignments: Assignment[] }) => {
                     {thread.main_post.description}
                   </p>
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      {renderDueStatusBadge(
-                        dueStatus,
-                        thread?.assignment?.dueDate
-                      )}
-                    </div>
                     <div className="flex items-center text-black-500 text-sm">
                       <span>By: {thread.main_post.author}</span>
                     </div>

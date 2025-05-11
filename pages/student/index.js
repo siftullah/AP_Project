@@ -24,38 +24,14 @@ const Home = () => {
     queryFn: fetchClassrooms,
   });
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const headerVariants = {
-    hidden: { opacity: 0, y: -30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
-  };
-
   return (
     <div className="bg-gradient-to-b from-blue-50 via-blue-50/50 to-white px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
       <motion.div
         initial="hidden"
         animate="visible"
-        variants={containerVariants}
         className="mx-auto max-w-7xl"
       >
-        <motion.header variants={headerVariants} className="mb-10">
+        <motion.header className="mb-10">
           <div className="flex items-center gap-3 mb-3">
             <div className="bg-blue-100 p-2 rounded-lg">
               <BookOpen className="w-6 h-6 text-black-700" />
@@ -95,7 +71,6 @@ const Home = () => {
           ) : classroomData && classroomData.length > 0 ? (
             <motion.div
               key="classes"
-              variants={containerVariants}
               className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
             >
               {classroomData.map((classroom, index) => (
@@ -143,7 +118,6 @@ const Home = () => {
   );
 };
 
-// Set the layout for this page
 Home.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default Home;

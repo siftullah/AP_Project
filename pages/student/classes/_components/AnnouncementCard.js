@@ -5,15 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Bell, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Announcement } from "@/app/types/classroom";
 import { motion } from "framer-motion";
 
-const AnnouncementCard = ({
-  announcements,
-}: {
-  announcements: Announcement[];
-}) => {
-  const formatDate = (dateString: string) => {
+const AnnouncementCard = ({ announcements }) => {
+  const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
       year: "numeric",
@@ -27,7 +22,7 @@ const AnnouncementCard = ({
   const pathname = usePathname();
 
   // Calculate how recent the announcement is
-  const getTimeAgo = (dateString: string) => {
+  const getTimeAgo = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor(
@@ -45,26 +40,6 @@ const AnnouncementCard = ({
     }
   };
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4 },
-    },
-  };
-
   if (announcements.length === 0) {
     return (
       <motion.div
@@ -78,19 +53,14 @@ const AnnouncementCard = ({
   }
 
   return (
-    <motion.div
-      className="space-y-4"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <motion.div className="space-y-4" initial="hidden" animate="visible">
       {announcements.map((announcement) => {
         const isRecent =
           new Date(announcement.main_post.createdAt).getTime() >
           Date.now() - 24 * 60 * 60 * 1000;
 
         return (
-          <motion.div key={announcement.id} variants={itemVariants}>
+          <motion.div key={announcement.id}>
             <Link href={`${pathname}/${announcement.id}`}>
               <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
                 <Card className="bg-white shadow-sm hover:shadow-md border-blue-100 overflow-hidden transition-all">

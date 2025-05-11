@@ -71,12 +71,18 @@ const ThreadPage = () => {
   // Mutation hook for posting a reply
   const { mutate, isPending: isSubmitting } = useMutation({
     mutationFn: (replyText) =>
-      postReply(params.classID, params.threadID, { reply: replyText }),
+      postReply(router.query.classID, router.query.threadID, {
+        reply: replyText,
+      }),
     onSuccess: () => {
       setReply("");
       // Invalidate and refetch thread data
       queryClient.invalidateQueries({
-        queryKey: ["threadDetails", params.classID, params.threadID],
+        queryKey: [
+          "threadDetails",
+          router.query.classID,
+          router.query.threadID,
+        ],
       });
     },
     onError: (error) => {
