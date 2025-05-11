@@ -4,8 +4,6 @@ import Sidebar from "@/components/Administration/layout/Sidebar"
 import Header  from "@/components/Administration/layout/Header"
 import { Toaster } from "@/components/ui/toaster"
 
-// import "../../styles/globals.css";
-
 export default function AdministrationLayout({ children }) 
 {
   const [showSidebar, setShowSidebar] = useState(true);
