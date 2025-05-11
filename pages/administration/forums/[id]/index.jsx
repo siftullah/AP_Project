@@ -60,7 +60,7 @@ export default function ForumThreadsPage() {
     setIsDeleting(true)
     try {
       const response = await fetch('/api/administration/forums/delete-forum', {
-        method: 'DELETE',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ forum_id: forumId })
       })
@@ -151,7 +151,7 @@ export default function ForumThreadsPage() {
     setIsDeletingThread(threadId)
     try {
       const response = await fetch(`/api/administration/forums/delete-thread?thread_id=${threadId}`, {
-        method: 'DELETE',
+        method: 'POST',
       })
 
       if (!response.ok) {

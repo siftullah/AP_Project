@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell, LogOut, User2, Menu } from 'lucide-react'
+import { LogOut, User2, Menu } from 'lucide-react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 
@@ -36,10 +36,6 @@ export default function Header({ setShowSidebar }) {
         </Button>
 
         <div className="flex items-center space-x-6">
-          <div className="relative">
-            <Bell className="h-6 w-6 text-slate-400 fill-current" />
-            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
-          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

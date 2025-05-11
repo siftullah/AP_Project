@@ -128,7 +128,7 @@ export default function ThreadPostsPage() {
     setIsDeletingPost(postId)
     try {
       const response = await fetch(`/api/administration/forums/delete-post?post_id=${postId}`, {
-        method: 'DELETE',
+        method: 'POST',
       })
 
       if (!response.ok) {
@@ -185,7 +185,7 @@ export default function ThreadPostsPage() {
     setIsDeletingThread(true)
     try {
       const response = await fetch(`/api/administration/forums/delete-thread?thread_id=${threadId}`, {
-        method: 'DELETE',
+        method: 'POST',
       })
 
       if (!response.ok) {

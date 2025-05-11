@@ -9,14 +9,14 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    const { auth_userId } = getAuth(req)
+    const { userId } = getAuth(req)
 
-    if (!auth_userId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthenticated User" })
     }
 
     const client = await clerkClient()
-    const user = await client.users.getUser(auth_userId)
+    const user = await client.users.getUser(userId)
 
     if (!user?.publicMetadata['university_id']) {
       return res.status(401).json({ error: 'University ID of authenticated user not found' })
@@ -36,48 +36,48 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Administrator not found' })
     }
 
-    const userId = existingAdmin.user_id
+    const adminUserId = existingAdmin.user_id
 
     // Delete all related records in transaction
     await prisma.$transaction(async (tx) => {
       // Delete from CustomGroupMembers
       await tx.customGroupMembers.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from CustomGroup where user is creator
       await tx.customGroup.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from ClassroomTeachers
       await tx.classroomTeachers.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from ClassroomPost
       await tx.classroomPost.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from ThreadPost
       await tx.threadPost.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from Forum
       await tx.forum.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from Faculty
       await tx.faculty.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from Student
       await tx.student.deleteMany({
-        where: { user_id: userId }
+        where: { user_id: adminUserId }
       })
 
       // Delete from UniAdministration
@@ -87,12 +87,12 @@ export default async function handler(req, res) {
 
       // Finally delete the user
       await tx.user.delete({
-        where: { id: userId }
+        where: { id: adminUserId }
       })
     })
 
     // Delete user from Clerk
-    await client.users.deleteUser(userId)
+    await client.users.deleteUser(adminUserId)
 
     await prisma.$disconnect()
     return res.json({ 

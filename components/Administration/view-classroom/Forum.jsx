@@ -100,7 +100,7 @@ export default function Forum({ classroomId, threadType }) {
     setIsDeletingThread(threadId)
     try {
       const response = await fetch(`/api/administration/classrooms/view-classroom/delete-thread?thread_id=${threadId}`, {
-        method: 'DELETE',
+        method: 'POST',
       })
 
       if (!response.ok) {

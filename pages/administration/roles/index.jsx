@@ -56,7 +56,10 @@ export default function RolesPage() {
   const handleDelete = async (id) => {
     try {
       await fetch('/api/administration/roles/delete-role', {
-        method: 'DELETE',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ id })
       })
 

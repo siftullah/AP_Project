@@ -259,11 +259,11 @@ export default function ViewClassroomPage() {
                 <DialogTrigger asChild>
                   <Button>Manage Teachers</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader>
                     <DialogTitle>Manage Teachers</DialogTitle>
                   </DialogHeader>
-                  <div className="py-4">
+                  <div className="py-4 flex-1 overflow-y-auto">
                     <Label>Select Teachers</Label>
                     <Command className="border mt-2 rounded-lg">
                       <CommandInput placeholder="Search teachers..." />
@@ -293,7 +293,7 @@ export default function ViewClassroomPage() {
                       ))}
                     </Command>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end pt-4 border-t">
                     <Button onClick={handleSubmitTeachers} disabled={isSubmitting}>
                       {isSubmitting ? "Updating..." : "Update Teachers"}
                     </Button>
