@@ -1,4 +1,4 @@
-"use client";
+;
 
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/toast";
 import { Toaster } from "@/components/ui/toaster";
 import ReminderLoader from "@/components/ReminderLoader";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
