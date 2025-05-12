@@ -66,13 +66,13 @@ export async function getServerSideProps({ req }) {
     const [groupsRes, usersRes] = await Promise.all([
       fetch(`http://localhost:3000/api/administration/groups/get-groups`, {
         headers: {
-          // Forward the authentication cookie from the request
+          
           Cookie: req.headers.cookie || "",
         }
       }),
       fetch(`http://localhost:3000/api/administration/groups/get-users`, {
         headers: {
-          // Forward the authentication cookie from the request
+          
           Cookie: req.headers.cookie || "",
         }
       })

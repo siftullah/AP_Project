@@ -54,7 +54,7 @@ export async function getServerSideProps({ req }) {
   try {
     const response = await fetch(`http://localhost:3000/api/administration/get-stats`, {
       headers: {
-        // Forward the authentication cookie from the request
+        
         Cookie: req.headers.cookie || "",
       },
     })

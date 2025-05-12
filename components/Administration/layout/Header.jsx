@@ -36,7 +36,6 @@ export default function Header({ setShowSidebar }) {
         </Button>
 
         <div className="flex items-center space-x-6">
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative flex items-center gap-2 px-2 py-1.5 text-sm text-slate-700 hover:text-slate-900 focus:outline-none">

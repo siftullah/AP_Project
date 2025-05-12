@@ -17,7 +17,7 @@ export default function AdministrationLayout({ children })
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="flex h-screen bg-slate-50">
-        { showSidebar && (<Sidebar />)}
+        { showSidebar && (<Sidebar />) }
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header setShowSidebar={setShowSidebar} />
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50">

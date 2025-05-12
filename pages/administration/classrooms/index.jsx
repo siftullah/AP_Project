@@ -201,7 +201,7 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
       
       const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
         headers: {
-          // Forward the authentication cookie from the request
+          
         
         },
       })
@@ -245,7 +245,7 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
       
       const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
         headers: {
-          // Forward the authentication cookie from the request
+          
          
         },
       })
@@ -283,7 +283,7 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
       
       const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
         headers: {
-          // Forward the authentication cookie from the request
+          
       
         },
       })

@@ -98,7 +98,7 @@ export async function getServerSideProps(context) {
       "http://localhost:3000/api/student/classes",
       {
         headers: {
-          // Forward the authentication cookie from the request
+          
           Cookie: req.headers.cookie || "",
         },
       }

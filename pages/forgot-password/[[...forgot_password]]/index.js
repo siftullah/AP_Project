@@ -13,6 +13,8 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useSignIn } from '@clerk/nextjs'
 import { useRouter } from 'next/router'
+import Head from "next/head";
+import Image from "next/image";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('')
@@ -81,35 +83,53 @@ const ForgotPasswordPage = () => {
 
   return (
     <>
-      <header className="top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+      <Head>
+        <title>Reset Password - EduAssist</title>
+        <meta name="description" content="Reset your EduAssist password" />
+      </Head>
+
+      <header className="top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-sky-100 shadow-sm">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <span className="font-bold text-xl text-gray-900">EduAssist</span>
+                <Image
+                  src="/fyp-logo.png"
+                  alt="EduAssist"
+                  className="h-10 w-auto"
+                  width={100}
+                  height={100}
+                />
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
-                href="/sign-in"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900"
-              >
-                Sign in
+              <Link href="/">
+                <button className="px-5 py-2 rounded-md bg-black hover:bg-gray-800 text-white font-medium transition-colors shadow-md">
+                  Home
+                </button>
+              </Link>
+              <Link href="/sign-up">
+                <button className="px-5 py-2 rounded-md bg-sky-600 hover:bg-sky-700 text-white font-medium transition-colors shadow-md">
+                  Sign Up
+                </button>
               </Link>
             </div>
           </div>
         </nav>
       </header>
 
-      <div className="flex bg-gray-100 min-h-screen">
+      <div className="flex bg-slate-100 min-h-screen">
         <div className="flex-1">
           <main className="mx-auto sm:px-6 lg:px-8 py-6 max-w-7xl">
             <div className="px-4 sm:px-0 py-6">
               <Card className="mx-auto max-w-md">
                 <CardHeader>
-                  <CardTitle className="font-bold text-2xl text-center">
+                  <CardTitle className="text-4xl text-center font-pacifico text-sky-500">
                     {!successfulCreation ? "Reset Password" : "Create New Password"}
                   </CardTitle>
+                  <p className="text-muted-foreground text-center">
+                    {!successfulCreation ? "Enter your email to reset password" : "Enter the code sent to your email"}
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={!successfulCreation ? create : reset} className="space-y-4">
@@ -186,11 +206,15 @@ const ForgotPasswordPage = () => {
                       <p className="text-red-500 text-sm mt-2">{error}</p>
                     )}
 
-                    <Button className="w-full" type="submit">
+                    <Button 
+                      type="submit"
+                      className="w-full bg-sky-600 hover:bg-sky-700"
+                      disabled={isLoading}
+                    >
                       {isLoading ? (
                         <span className="flex justify-center items-center">
                           <svg
-                            className="mr-3 -ml-1 w-5 h-5 text-black animate-spin"
+                            className="mr-3 -ml-1 w-5 h-5 text-white animate-spin"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -223,12 +247,12 @@ const ForgotPasswordPage = () => {
                     )}
                   </form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                  <p className="text-gray-500 text-sm">
+                <CardFooter className="justify-center text-center">
+                  <p className="text-sm text-gray-500">
                     Remember your password?{" "}
                     <Link
                       href="/sign-in"
-                      className="text-primary hover:underline"
+                      className="text-sky-600 hover:underline"
                     >
                       Sign in
                     </Link>
