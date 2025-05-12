@@ -26,7 +26,6 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const AssignmentPage = ({ assignmentData, error }) => {
   const [uploadFiles, setUploadFiles] = useState([]);
@@ -648,7 +647,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-AssignmentPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default AssignmentPage;

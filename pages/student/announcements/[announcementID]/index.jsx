@@ -8,7 +8,6 @@ import { ArrowLeft, Bell, FileIcon, Paperclip, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "../_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const AnnouncementPage = ({ announcementData, error }) => {
   const [reply, setReply] = useState("");
@@ -398,8 +397,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-// Add layout for consistent navigation
-AnnouncementPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default AnnouncementPage;

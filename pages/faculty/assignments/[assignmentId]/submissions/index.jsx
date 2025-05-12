@@ -1,13 +1,6 @@
-;
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -55,18 +48,18 @@ const SubmissionsPage = () => {
   useEffect(() => {
     const loadSubmissions = async () => {
       if (!assignmentId) return;
-      
+
       try {
         setIsLoading(true);
         const response = await fetchSubmissions(assignmentId);
         setData(response);
-        
+
         const marksState = {};
         response.submissions.forEach((submission) => {
           marksState[submission.id] = submission.marks?.toString() || "";
         });
         setMarks(marksState);
-        
+
         setIsError(false);
       } catch (error) {
         setIsError(true);
@@ -84,7 +77,7 @@ const SubmissionsPage = () => {
     try {
       setIsUpdating(true);
       setUpdatingSubmissionId(submissionId);
-      
+
       await updateSubmissionMarks({
         assignmentId,
         submissionId,
@@ -96,9 +89,7 @@ const SubmissionsPage = () => {
       setData(updatedData);
     } catch (error) {
       toast.error(
-        error.response?.data?.error ||
-          error.message ||
-          "Failed to update marks"
+        error.response?.data?.error || error.message || "Failed to update marks"
       );
     } finally {
       setIsUpdating(false);
@@ -117,7 +108,11 @@ const SubmissionsPage = () => {
   if (isError || !data?.assignment) {
     return (
       <div className="px-6 py-8">
-        <Button onClick={() => router.back()} variant="outline" className="mb-4">
+        <Button
+          onClick={() => router.back()}
+          variant="outline"
+          className="mb-4"
+        >
           <ArrowLeftIcon className="mr-2 w-4 h-4" /> Back
         </Button>
         <Card className="rounded-xl shadow border border-red-200">
@@ -135,7 +130,11 @@ const SubmissionsPage = () => {
     <div className="px-6 py-8 space-y-6">
       <ToastContainer />
       <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl p-6 shadow">
-        <Button onClick={() => router.back()} variant="ghost" className="text-white mb-3">
+        <Button
+          onClick={() => router.back()}
+          variant="ghost"
+          className="text-white mb-3"
+        >
           <ArrowLeftIcon className="w-4 h-4 mr-2" /> Back
         </Button>
         <h1 className="text-2xl font-bold">{assignment.title} - Submissions</h1>
@@ -143,7 +142,9 @@ const SubmissionsPage = () => {
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             {assignment.classroom.course.code} - {assignment.classroom.name}
           </Badge>
-          <span>Total Submissions: {submissions.length} / {totalEnrolled}</span>
+          <span>
+            Total Submissions: {submissions.length} / {totalEnrolled}
+          </span>
         </div>
       </div>
 
@@ -165,7 +166,9 @@ const SubmissionsPage = () => {
                 <TableRow key={submission.id}>
                   <TableCell>{submission.student.name}</TableCell>
                   <TableCell>{submission.student.rollNumber}</TableCell>
-                  <TableCell>{new Date(submission.submittedOn).toLocaleString()}</TableCell>
+                  <TableCell>
+                    {new Date(submission.submittedOn).toLocaleString()}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-2">
                       {submission.attachments.map((attachment) => (
@@ -202,7 +205,8 @@ const SubmissionsPage = () => {
                       size="sm"
                       onClick={() => handleMarkSubmission(submission.id)}
                       disabled={
-                        (isUpdating && updatingSubmissionId === submission.id) ||
+                        (isUpdating &&
+                          updatingSubmissionId === submission.id) ||
                         !marks[submission.id] ||
                         marks[submission.id] === submission.marks?.toString()
                       }

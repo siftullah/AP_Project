@@ -15,7 +15,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const ThreadPage = ({ threadData, error }) => {
   const [reply, setReply] = useState("");
@@ -374,8 +373,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-// Set the layout for this page
-ThreadPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default ThreadPage;

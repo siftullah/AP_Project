@@ -1,6 +1,4 @@
-;
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
 import Link from "next/link";
@@ -10,37 +8,14 @@ import { Bell, MessageSquare, Clock, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import axios from "axios";
 
-const Announcements = () => {
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        const response = await axios.get("/api/faculty/announcements");
-        setAnnouncements(response.data.threads);
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnnouncements();
-  }, []);
+const Announcements = ({ initialAnnouncements }) => {
+  const [announcements] = useState(initialAnnouncements || []);
 
   const filterAnnouncements = (category) => {
     if (category === "All") return announcements;
     return announcements.filter((d) => d.type === category);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
@@ -48,7 +23,9 @@ const Announcements = () => {
           <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
             Announcement Board
           </h2>
-          <p className="text-slate-500 mt-1">Stay updated with the latest news and updates</p>
+          <p className="text-slate-500 mt-1">
+            Stay updated with the latest news and updates
+          </p>
         </div>
       </div>
 
@@ -155,9 +132,7 @@ const AnnouncementCard = ({ announcements }) => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4 text-slate-400" />
-                    <span>
-                      {formatDate(announcement.main_post.created_at)}
-                    </span>
+                    <span>{formatDate(announcement.main_post.created_at)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -168,5 +143,33 @@ const AnnouncementCard = ({ announcements }) => {
     </div>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { req } = context;
+
+  try {
+    const response = await axios.get(
+      "http://localhost:3000/api/faculty/announcements",
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        initialAnnouncements: response.data.threads || [],
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching announcements:", error);
+    return {
+      props: {
+        initialAnnouncements: [],
+      },
+    };
+  }
+}
 
 export default Announcements;

@@ -7,7 +7,6 @@ import { ArrowLeft, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const ForumPage = ({ forumData, error }) => {
   const router = useRouter();
@@ -221,8 +220,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-// Add layout for consistent navigation
-ForumPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default ForumPage;

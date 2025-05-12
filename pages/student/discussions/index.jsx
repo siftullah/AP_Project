@@ -17,7 +17,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const Discussions = ({ discussionsData, error }) => {
   const router = useRouter();
@@ -334,5 +333,4 @@ export async function getServerSideProps(context) {
   }
 }
 
-Discussions.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 export default Discussions;

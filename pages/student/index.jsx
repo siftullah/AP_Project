@@ -1,12 +1,8 @@
-;
-
 import React from "react";
 import { ClassCard } from "./_components/ClassCard";
-import { ClassSkeleton } from "./_components/ClassSkeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { BookOpen } from "lucide-react";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const Home = ({ classroomData, isError, errorMessage }) => {
   return (
@@ -127,7 +123,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-Home.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default Home;

@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Bell } from "lucide-react";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
 
@@ -329,8 +328,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-// Add layout for consistent navigation
-Announcements.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default Announcements;

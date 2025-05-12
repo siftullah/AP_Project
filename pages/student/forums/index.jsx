@@ -3,7 +3,6 @@ import { MessageCircle } from "lucide-react";
 import ForumCard from "@/components/ForumCard";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
 
@@ -134,8 +133,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-// Add layout for consistent navigation
-Forums.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default Forums;

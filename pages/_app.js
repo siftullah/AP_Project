@@ -2,32 +2,41 @@ import "@/styles/globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import FacultyLayout from "@/components/layouts/FacultyLayout";
+import StudentLayout from "@/components/layouts/StudentLayout";
+
 export default function App({ Component, pageProps, router }) {
+  // Select the appropriate layout based on the pathname
+  const getLayout = () => {
+    const path = router.pathname;
 
-  if (router.pathname.startsWith('/administration')) {
-    return (
-      <ClerkProvider>
-        <AdminLayout>
-          <Component {...pageProps} />
-        </AdminLayout>
-      </ClerkProvider>
-    );
-  }
+    if (path.startsWith("/administration")) {
+      return AdminLayout;
+    }
 
-  if (router.pathname.startsWith('/faculty')) {
-    return (
-      <ClerkProvider>
-        <FacultyLayout>
-          <Component {...pageProps} />
-        </FacultyLayout>
-      </ClerkProvider>
-    );
-  }
+    if (path.startsWith("/faculty")) {
+      return FacultyLayout;
+    }
 
-  // Use the layout defined at the page level, if available
-  const getLayout = Component.getLayout || ((page) => page);
+    if (path.startsWith("/student")) {
+      return StudentLayout;
+    }
+
+    // Return null for default layout (no wrapper)
+    return null;
+  };
+
+  // Get the appropriate layout component
+  const Layout = getLayout();
 
   return (
-    <ClerkProvider>{getLayout(<Component {...pageProps} />)}</ClerkProvider>
+    <ClerkProvider>
+      {Layout ? (
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      ) : (
+        <Component {...pageProps} />
+      )}
+    </ClerkProvider>
   );
 }

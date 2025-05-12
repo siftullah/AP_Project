@@ -26,7 +26,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const CreateDiscussion = () => {
   const router = useRouter();
@@ -474,7 +473,5 @@ const CreateDiscussion = () => {
     </div>
   );
 };
-
-CreateDiscussion.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default CreateDiscussion;

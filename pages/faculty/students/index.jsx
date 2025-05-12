@@ -1,6 +1,4 @@
-;
-
-import { Suspense, useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,32 +16,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 
-const FacultyStudentsContent = () => {
-  const searchParams = useSearchParams();
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+const FacultyStudentsPage = ({ data, initialFilter }) => {
+  const router = useRouter();
   const [isRemoving, setIsRemoving] = useState(false);
-  const [filter, setFilter] = useState(searchParams.get("classId") || "all");
+  const [filter, setFilter] = useState(initialFilter || "all");
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await axios.get("/api/faculty/students");
-        setData(response.data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching students:", error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchStudents();
-  }, []);
+  const handleFilterChange = (value) => {
+    setFilter(value);
+    // Update the URL query parameter
+    router.push(
+      {
+        pathname: router.pathname,
+        query: value !== "all" ? { classId: value } : {},
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   const handleRemoveStudent = async (studentId) => {
     setIsRemoving(true);
@@ -52,14 +46,12 @@ const FacultyStudentsContent = () => {
         data: { enrollmentId: studentId },
       });
       toast.success("Student removed successfully");
-      
-      // Refresh students data
-      const response = await axios.get("/api/faculty/students");
-      setData(response.data);
+
+      // Refresh the page to get updated data
+      router.replace(router.asPath);
     } catch (error) {
       console.error("Error removing student:", error);
       toast.error("Failed to remove student");
-    } finally {
       setIsRemoving(false);
     }
   };
@@ -69,8 +61,8 @@ const FacultyStudentsContent = () => {
       filter === "all" ? true : student.classroom_id === filter
     ) ?? [];
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (!data) {
+    return <div>No data available</div>;
   }
 
   return (
@@ -78,7 +70,7 @@ const FacultyStudentsContent = () => {
       <ToastContainer />
       <CardHeader className="flex flex-row justify-between items-center">
         <CardTitle>Students Details</CardTitle>
-        <Select value={filter} onValueChange={(value) => setFilter(value)}>
+        <Select value={filter} onValueChange={handleFilterChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by course" />
           </SelectTrigger>
@@ -125,12 +117,35 @@ const FacultyStudentsContent = () => {
   );
 };
 
-const Page = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <FacultyStudentsContent />
-    </Suspense>
-  );
-};
+export async function getServerSideProps(context) {
+  const { req, query } = context;
+  const initialFilter = query.classId || "all";
 
-export default Page;
+  try {
+    const response = await axios.get(
+      "http://localhost:3000/api/faculty/students",
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        data: response.data,
+        initialFilter,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    return {
+      props: {
+        data: null,
+        initialFilter,
+      },
+    };
+  }
+}
+
+export default FacultyStudentsPage;

@@ -89,7 +89,7 @@ const Sidebar = ({ children, userType }) => {
         initial={isMobile ? "closed" : "open"}
         animate={sidebarOpen ? "open" : "closed"}
         variants={sidebarVariants}
-        className="z-20 fixed lg:relative flex flex-col bg-white border-r border-blue-100 w-72 min-h-screen"
+        className="z-20 fixed h-screen lg:sticky lg:top-0 flex flex-col bg-white border-r border-blue-100 w-72 overflow-hidden"
       >
         <div className="flex justify-between items-center p-4 text-white">
           <Link href={`/${userType}`} className="flex items-center">
@@ -126,7 +126,7 @@ const Sidebar = ({ children, userType }) => {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-6 overflow-y-auto">
+        <nav className="flex-1 space-y-1 px-3 py-6 overflow-y-auto scrollbar-thin">
           <div className="mb-4 px-3">
             <p className="font-medium text-blue-400 text-xs uppercase tracking-wider">
               Main Menu
@@ -181,12 +181,12 @@ const Sidebar = ({ children, userType }) => {
       </motion.aside>
 
       {/* Main content */}
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 min-h-screen w-full">
         <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          className="flex-1"
+          className="flex-1 w-full"
         >
           {children}
         </motion.main>

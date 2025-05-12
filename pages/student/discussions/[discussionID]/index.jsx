@@ -14,7 +14,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "./_components/Loader";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const DiscussionPage = ({ discussionData, error }) => {
   const [reply, setReply] = useState("");
@@ -404,8 +403,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-// Add layout for consistent navigation
-DiscussionPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default DiscussionPage;

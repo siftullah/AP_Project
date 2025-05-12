@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const CreateClassPost = () => {
   const [title, setTitle] = useState("");
@@ -149,7 +148,5 @@ const CreateClassPost = () => {
     </div>
   );
 };
-
-CreateClassPost.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default CreateClassPost;

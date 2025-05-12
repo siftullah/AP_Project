@@ -1,14 +1,7 @@
-;
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -49,7 +42,7 @@ const EditAssignment = () => {
       try {
         const [assignmentRes, classesRes] = await Promise.all([
           axios.get(`/api/faculty/assignments/${assignmentId}`),
-          axios.get("/api/faculty/assignments")
+          axios.get("/api/faculty/assignments"),
         ]);
 
         setAssignment(assignmentRes.data);
@@ -63,7 +56,6 @@ const EditAssignment = () => {
           totalMarks: assignment.totalMarks.toString(),
           classroomId: assignment.classroom.id,
         });
-
       } catch (error) {
         console.error("Error fetching data:", error);
         setIsError(true);
@@ -87,9 +79,9 @@ const EditAssignment = () => {
     } catch (error) {
       console.error("Error updating assignment:", error);
       toast.error(
-        error.response?.data?.error || 
-        error.message || 
-        "Failed to update assignment"
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to update assignment"
       );
     } finally {
       setIsSubmitting(false);
@@ -108,7 +100,11 @@ const EditAssignment = () => {
     return (
       <div className="px-6 py-8">
         <ToastContainer />
-        <Button onClick={() => router.back()} variant="outline" className="mb-4">
+        <Button
+          onClick={() => router.back()}
+          variant="outline"
+          className="mb-4"
+        >
           <ArrowLeftIcon className="mr-2 w-4 h-4" /> Back
         </Button>
         <Card className="rounded-xl shadow border border-red-200">
@@ -124,7 +120,11 @@ const EditAssignment = () => {
     <div className="px-6 py-8">
       <ToastContainer />
       <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl p-6 shadow mb-6">
-        <Button onClick={() => router.back()} variant="ghost" className="text-white mb-3">
+        <Button
+          onClick={() => router.back()}
+          variant="ghost"
+          className="text-white mb-3"
+        >
           <ArrowLeftIcon className="mr-2 w-4 h-4" /> Back
         </Button>
         <h1 className="text-2xl font-bold">Edit Assignment</h1>
@@ -199,7 +199,11 @@ const EditAssignment = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-blue-600 text-white"
+            >
               {isSubmitting && (
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
               )}

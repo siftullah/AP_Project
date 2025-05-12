@@ -1,66 +1,27 @@
-;
-
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/router";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeftIcon,
-  FileIcon,
-  Loader2,
-  Edit,
-  Eye,
-} from "lucide-react";
+import { ArrowLeftIcon, FileIcon, Edit, Eye } from "lucide-react";
 import axios from "axios";
 
-const FacultyAssignmentPage = () => {
+const FacultyAssignmentPage = ({ assignment, error }) => {
   const router = useRouter();
-  const { assignmentId } = router.query;
-  const [assignment, setAssignment] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchAssignment = async () => {
-      if (!assignmentId) return;
-
-      try {
-        const { data } = await axios.get(`/api/faculty/assignments/${assignmentId}`);
-        setAssignment(data);
-        setError(null);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAssignment();
-  }, [assignmentId]);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-      </div>
-    );
-  }
 
   if (error || !assignment) {
     return (
       <div className="px-6 py-8">
-        <Button onClick={() => router.back()} variant="outline" className="mb-4">
+        <Button
+          onClick={() => router.back()}
+          variant="outline"
+          className="mb-4"
+        >
           <ArrowLeftIcon className="mr-2 w-4 h-4" /> Back
         </Button>
         <Card className="rounded-xl shadow border border-red-200">
           <CardContent className="py-8 text-center text-red-600">
-            {error?.message || "Failed to load assignment."}
+            {error || "Failed to load assignment."}
           </CardContent>
         </Card>
       </div>
@@ -70,7 +31,11 @@ const FacultyAssignmentPage = () => {
   return (
     <div className="px-6 py-8 space-y-6">
       <div className="bg-gradient-to-r from-blue-500 to-blue-500 text-white rounded-xl p-6 shadow">
-        <Button onClick={() => router.back()} variant="ghost" className="text-white mb-3">
+        <Button
+          onClick={() => router.back()}
+          variant="ghost"
+          className="text-white mb-3"
+        >
           <ArrowLeftIcon className="w-4 h-4 mr-2" /> Back
         </Button>
         <h1 className="text-3xl font-bold">{assignment.title}</h1>
@@ -105,7 +70,8 @@ const FacultyAssignmentPage = () => {
               <strong>Total Marks:</strong> {assignment.totalMarks}
             </div>
             <div>
-              <strong>Submissions:</strong> {assignment.submissions.total} / {assignment.submissions.enrolled}
+              <strong>Submissions:</strong> {assignment.submissions.total} /{" "}
+              {assignment.submissions.enrolled}
             </div>
           </CardContent>
         </Card>
@@ -160,5 +126,36 @@ const FacultyAssignmentPage = () => {
     </div>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { req, params } = context;
+  const { assignmentId } = params;
+
+  try {
+    const response = await axios.get(
+      `http://localhost:3000/api/faculty/assignments/${assignmentId}`,
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        assignment: response.data,
+        error: null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching assignment:", error);
+    return {
+      props: {
+        assignment: null,
+        error: error.message || "Failed to load assignment",
+      },
+    };
+  }
+}
 
 export default FacultyAssignmentPage;

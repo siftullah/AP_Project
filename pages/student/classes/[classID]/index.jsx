@@ -10,7 +10,6 @@ import DiscussionCard from "@/pages/student/classes/_components/DiscussionCard";
 import Loader from "@/pages/student/classes/_components/Loader";
 import { motion } from "framer-motion";
 import axios from "axios";
-import StudentLayout from "@/components/layouts/StudentLayout";
 
 const ClassPage = ({ classData, error }) => {
   const router = useRouter();
@@ -295,8 +294,5 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-// Set the layout for this page
-ClassPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default ClassPage;

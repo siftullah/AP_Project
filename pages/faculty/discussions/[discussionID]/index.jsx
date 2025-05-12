@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,39 +10,19 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 
-const DiscussionPage = () => {
+const DiscussionPage = ({ initialDiscussion }) => {
   const router = useRouter();
-  const [discussion, setDiscussion] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [discussion, setDiscussion] = useState(initialDiscussion);
   const [reply, setReply] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { discussionID } = router.query;
-
-  useEffect(() => {
-    const fetchDiscussion = async () => {
-      try {
-        const { data } = await axios.get(
-          `/api/faculty/discussions/${discussionID}`
-        );
-        setDiscussion(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching discussion:", error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchDiscussion();
-  }, [discussionID]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
 
     try {
-      await axios.post(`/api/faculty/discussions/${discussionID}/post-reply`, {
+      await axios.post(`/api/faculty/discussions/${discussion.id}/post-reply`, {
         reply,
       });
 
@@ -51,7 +31,7 @@ const DiscussionPage = () => {
 
       // Refresh discussion data
       const { data } = await axios.get(
-        `/api/faculty/discussions/${discussionID}`
+        `/api/faculty/discussions/${discussion.id}`
       );
       setDiscussion(data);
     } catch (error) {
@@ -65,15 +45,13 @@ const DiscussionPage = () => {
     reply.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading) {
+  if (!discussion) {
     return (
-      <div className="flex justify-center items-center h-64 text-blue-500">
-        Loading discussion...
+      <div className="flex justify-center items-center h-64 text-red-500">
+        Discussion not found
       </div>
     );
   }
-
-  if (!discussion) return null;
 
   return (
     <div className="px-4 md:px-10 py-8 space-y-6">
@@ -176,5 +154,34 @@ const DiscussionPage = () => {
     </div>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { req, params } = context;
+  const { discussionID } = params;
+
+  try {
+    const response = await axios.get(
+      `http://localhost:3000/api/faculty/discussions/${discussionID}`,
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        initialDiscussion: response.data,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching discussion:", error);
+    return {
+      props: {
+        initialDiscussion: null,
+      },
+    };
+  }
+}
 
 export default DiscussionPage;

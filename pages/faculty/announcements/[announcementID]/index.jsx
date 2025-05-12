@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,33 +10,14 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
-const AnnouncementPage = () => {
+const AnnouncementPage = ({ initialAnnouncementData }) => {
   const [reply, setReply] = useState("");
-  const [announcementData, setAnnouncementData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [announcementData, setAnnouncementData] = useState(
+    initialAnnouncementData
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { announcementID } = router.query;
-
-  useEffect(() => {
-    const fetchAnnouncementDetails = async () => {
-      if (!announcementID) return;
-
-      try {
-        const { data } = await axios.get(
-          `/api/faculty/announcements/${announcementID}`
-        );
-        setAnnouncementData(data);
-      } catch (error) {
-        console.error("Failed to fetch announcement:", error);
-        router.push("/404");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAnnouncementDetails();
-  }, [announcementID, router]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -69,10 +50,6 @@ const AnnouncementPage = () => {
       setIsSubmitting(false);
     }
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   if (!announcementData) {
     router.push("/404");
@@ -159,5 +136,34 @@ const AnnouncementPage = () => {
     </div>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { req, params } = context;
+  const { announcementID } = params;
+
+  try {
+    const response = await axios.get(
+      `http://localhost:3000/api/faculty/announcements/${announcementID}`,
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        initialAnnouncementData: response.data,
+      },
+    };
+  } catch (error) {
+    console.error("Failed to fetch announcement:", error);
+    return {
+      props: {
+        initialAnnouncementData: null,
+      },
+    };
+  }
+}
 
 export default AnnouncementPage;

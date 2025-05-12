@@ -1,13 +1,6 @@
-
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,44 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import axios from "axios";
 
-const AssignmentsContent = () => {
+const AssignmentsContent = ({ data, initialFilter }) => {
   const router = useRouter();
-  const initialClassId = router.query.classId || "all";
-  const [filter, setFilter] = useState(initialClassId);
+  const [filter, setFilter] = useState(initialFilter);
   const [search, setSearch] = useState("");
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
 
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const response = await axios.get("/api/faculty/assignments");
-        setData(response.data);
-        setIsError(false);
-      } catch (error) {
-        console.error("Error fetching assignments:", error);
-        setIsError(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAssignments();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-      </div>
-    );
-  }
-
-  if (isError || !data) {
+  if (!data) {
     return (
       <div className="flex justify-center items-center h-64 text-red-500">
         Error loading assignments.
@@ -77,7 +41,20 @@ const AssignmentsContent = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Select value={filter} onValueChange={(value) => setFilter(value)}>
+        <Select
+          value={filter}
+          onValueChange={(value) => {
+            setFilter(value);
+            router.push(
+              {
+                pathname: router.pathname,
+                query: value !== "all" ? { classId: value } : {},
+              },
+              undefined,
+              { shallow: true }
+            );
+          }}
+        >
           <SelectTrigger className="w-full md:w-64">
             <SelectValue placeholder="Filter by course" />
           </SelectTrigger>
@@ -146,9 +123,8 @@ const AssignmentsContent = () => {
   );
 };
 
-const Assignments = () => {
+const Assignments = ({ data, initialFilter }) => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -163,15 +139,40 @@ const Assignments = () => {
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        </div>
-      ) : (
-        <AssignmentsContent />
-      )}
+      <AssignmentsContent data={data} initialFilter={initialFilter} />
     </div>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { req, query } = context;
+  const initialFilter = query.classId || "all";
+
+  try {
+    const response = await axios.get(
+      "http://localhost:3000/api/faculty/assignments",
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        data: response.data,
+        initialFilter,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching assignments:", error);
+    return {
+      props: {
+        data: null,
+        initialFilter,
+      },
+    };
+  }
+}
 
 export default Assignments;

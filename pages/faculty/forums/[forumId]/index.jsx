@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,33 +15,9 @@ const safeFormatDistanceToNow = (dateString) => {
   return formatDistanceToNow(date, { addSuffix: true });
 };
 
-const ForumPage = () => {
-  const [forumData, setForumData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+const ForumPage = ({ forumData }) => {
   const router = useRouter();
   const basePath = "/faculty/discussions";
-
-  const { forumId } = router.query;
-
-  useEffect(() => {
-    const fetchForumData = async () => {
-      try {
-        const { data } = await axios.get(`/api/faculty/forums/${forumId}`);
-        setForumData(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching forum data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchForumData();
-  }, [forumId]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50/30 to-slate-100/60 py-12 px-2 overflow-x-hidden">
@@ -62,26 +38,10 @@ const ForumPage = () => {
         <Card className="mb-12 bg-white/95 rounded-3xl shadow-2xl border-0 px-0 md:px-8 py-8">
           <CardHeader>
             <div className="flex items-center gap-6">
-              <Avatar className="w-16 h-16 border-4 border-blue-200/70 shadow">
-                <AvatarImage
-                  src={`/avatars/${forumData?.created_by || "default"}.png`}
-                />
-                <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl">
-                  {forumData?.created_by?.[0]?.toUpperCase() || "?"}
-                </AvatarFallback>
-              </Avatar>
               <div>
                 <CardTitle className="text-3xl font-bold text-slate-900">
                   {forumData?.forum_name || "Forum Threads"}
                 </CardTitle>
-                <div className="text-sm text-slate-500 mt-1">
-                  Created by{" "}
-                  <span className="font-semibold">
-                    {forumData?.created_by || "Unknown"}
-                  </span>
-                  <span className="mx-2">•</span>
-                  {safeFormatDistanceToNow(forumData?.created_at)}
-                </div>
               </div>
             </div>
           </CardHeader>
@@ -141,5 +101,34 @@ const ForumPage = () => {
     </div>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { req, params } = context;
+  const { forumId } = params;
+
+  try {
+    const response = await axios.get(
+      `http://localhost:3000/api/faculty/forums/${forumId}`,
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        forumData: response.data,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching forum data:", error);
+    return {
+      props: {
+        forumData: null,
+      },
+    };
+  }
+}
 
 export default ForumPage;
