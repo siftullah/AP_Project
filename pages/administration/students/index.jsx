@@ -45,7 +45,6 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
@@ -70,7 +69,6 @@ export default function StudentsPage({ initialStudents, initialDepartments, init
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [isDeleting, setIsDeleting] = useState(null)
-  const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
 
   const columns = [
@@ -146,12 +144,9 @@ export default function StudentsPage({ initialStudents, initialDepartments, init
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
-      sorting,
       columnFilters,
     },
   })

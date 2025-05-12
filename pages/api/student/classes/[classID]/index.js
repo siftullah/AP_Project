@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get current user using getAuth for Pages Router
+    
     const { userId } = getAuth(req);
 
     if (!userId) {

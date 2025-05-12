@@ -39,7 +39,6 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
@@ -56,7 +55,6 @@ export default function BatchesPage({ initialBatches }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState(null)
   const [isDeleting, setIsDeleting] = useState(null)
-  const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
 
   const columns = [
@@ -111,12 +109,9 @@ export default function BatchesPage({ initialBatches }) {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
-      sorting,
       columnFilters,
     },
   })

@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   try {
-    // Get current user using getAuth for Pages Router
+    
     const { userId } = getAuth(req);
 
     if (!userId) {
