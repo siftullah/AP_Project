@@ -37,12 +37,6 @@ const sidebarSections = [
       { icon: Users, label: "Groups", href: "/administration/groups" },
       { icon: MessageSquare, label: "Forums", href: "/administration/forums" },
     ]
-  },
-  {
-    title: "Actions",
-    items: [
-      { icon: FileSpreadsheet, label: "Bulk Actions", href: "/administration/bulk-actions" },
-    ]
   }
 ]
 
