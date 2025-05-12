@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,85 +7,48 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Bell, FileIcon, Paperclip, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "../_components/Loader";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import StudentLayout from "@/components/layouts/StudentLayout";
 
-// Axios function to fetch announcement data
-const fetchAnnouncementDetails = async (announcementId) => {
-  try {
-    const { data } = await axios.get(
-      `/api/student/announcements/${announcementId}`
-    );
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.error || "Failed to fetch announcement details"
-      );
-    }
-    throw error;
-  }
-};
-
-// Axios function to post a reply
-const postReply = async ({ announcementId, reply }) => {
-  try {
-    const { data } = await axios.post(
-      `/api/student/announcements/${announcementId}/post-reply`,
-      { reply }
-    );
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || "Failed to post reply");
-    }
-    throw error;
-  }
-};
-
-const AnnouncementPage = () => {
+const AnnouncementPage = ({ announcementData, error }) => {
   const [reply, setReply] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { announcementID } = useParams();
+  const { announcementID } = router.query;
 
-  // Fetch announcement details using React Query
-  const {
-    data: announcementData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["announcementDetails", announcementID],
-    queryFn: () => fetchAnnouncementDetails(announcementID),
-  });
-
-  // Mutation for posting a reply
-  const replyMutation = useMutation({
-    mutationFn: postReply,
-    onSuccess: () => {
-      setReply("");
-      // Invalidate query to refresh the announcement data
-      queryClient.invalidateQueries({
-        queryKey: ["announcementDetails", announcementID],
-      });
-    },
-    onError: (error) => {
-      console.error("Failed to post reply:", error);
-    },
-  });
-
-  useEffect(() => {
-    if (error) {
-      console.error("Error fetching announcement details:", error);
-    }
-  }, [error]);
-
-  if (isLoading) {
+  if (!announcementData && !error) {
     return <Loader />;
   }
 
-  if (!announcementData) {
-    notFound();
+  // Error handling UI
+  if (error) {
+    return (
+      <div className="bg-gradient-to-b from-blue-50 via-blue-50/30 to-white px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+        <div className="mx-auto max-w-7xl text-center">
+          <div className="mb-4 text-gray-700">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="mx-auto w-16 h-16"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm1-7a1 1 0 11-2 0 1 1 0 012 0zm-1 3a1 1 0 100 2 1 1 0 000-2z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h3 className="mb-2 font-semibold text-gray-900 text-xl">{error}</h3>
+          <Button
+            onClick={() => router.push("/student")}
+            className="bg-blue-600 hover:bg-blue-700 mt-4"
+          >
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const formatDate = (dateString) => {
@@ -121,7 +84,24 @@ const AnnouncementPage = () => {
       return;
     }
 
-    replyMutation.mutate({ announcementId: announcementID, reply });
+    setIsSubmitting(true);
+
+    try {
+      await axios.post(
+        `/api/student/announcements/${announcementID}/post-reply`,
+        { reply }
+      );
+
+      // Clear reply field after submission
+      setReply("");
+
+      // Refresh the page to show the new reply
+      router.replace(router.asPath);
+    } catch (error) {
+      console.error("Failed to post reply:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -336,9 +316,9 @@ const AnnouncementPage = () => {
                     <Button
                       type="submit"
                       className="bg-blue-600 hover:bg-blue-700 text-white"
-                      disabled={replyMutation.isPending}
+                      disabled={isSubmitting}
                     >
-                      {replyMutation.isPending ? (
+                      {isSubmitting ? (
                         <div className="flex items-center gap-2">
                           <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
                           <span>Posting...</span>
@@ -360,5 +340,66 @@ const AnnouncementPage = () => {
     </div>
   );
 };
+
+// Server-side rendering to fetch announcement details
+export async function getServerSideProps(context) {
+  const { req, params } = context;
+  const { announcementID } = params;
+
+  try {
+    // Get the cookie from the request headers
+    const cookies = req.headers.cookie;
+
+    if (!cookies) {
+      return {
+        redirect: {
+          destination: "/sign-in",
+          permanent: false,
+        },
+      };
+    }
+
+    // Fetch announcement details using axios from the server
+    const response = await axios.get(
+      `http://localhost:3000/api/student/announcements/${announcementID}`,
+      {
+        headers: {
+          // Forward the authentication cookie from the request
+          Cookie: cookies,
+        },
+      }
+    );
+
+    return {
+      props: {
+        announcementData: response.data,
+        error: null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching announcement details:", error);
+
+    // Handle unauthorized errors by redirecting to sign-in
+    if (error.response?.status === 401) {
+      return {
+        redirect: {
+          destination: "/sign-in",
+          permanent: false,
+        },
+      };
+    }
+
+    return {
+      props: {
+        announcementData: null,
+        error:
+          error.response?.data?.error || "Failed to fetch announcement details",
+      },
+    };
+  }
+}
+
+// Add layout for consistent navigation
+AnnouncementPage.getLayout = (page) => <StudentLayout>{page}</StudentLayout>;
 
 export default AnnouncementPage;

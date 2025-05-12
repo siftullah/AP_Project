@@ -162,21 +162,6 @@ export const routes = [
     title: "Assignment",
     userType: "faculty",
   },
-  {
-    path: "/student/reminders",
-    title: "Reminders",
-    icon: Clock,
-    showInSidebar: true,
-    userType: "student",
-  },
-  {
-    path: "/faculty/reminders",
-    title: "Reminders",
-    icon: Clock,
-    showInSidebar: true,
-    userType: "faculty",
-  },
-  // Add more routes as needed
 ];
 
 export const getPageTitle = (pathname) => {
