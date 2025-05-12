@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import AdminLayout from "@/components/layouts/AdminLayout";
-
+import FacultyLayout from "@/components/layouts/FacultyLayout";
 export default function App({ Component, pageProps, router }) {
 
   if (router.pathname.startsWith('/administration')) {
@@ -10,6 +10,16 @@ export default function App({ Component, pageProps, router }) {
         <AdminLayout>
           <Component {...pageProps} />
         </AdminLayout>
+      </ClerkProvider>
+    );
+  }
+
+  if (router.pathname.startsWith('/faculty')) {
+    return (
+      <ClerkProvider>
+        <FacultyLayout>
+          <Component {...pageProps} />
+        </FacultyLayout>
       </ClerkProvider>
     );
   }
