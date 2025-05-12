@@ -21,7 +21,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "pages/onboarding/index.js", "pages/forgot-password/[[...forgot_password]]/index.js"  ],
   "exclude": [
     "node_modules"
   ]
