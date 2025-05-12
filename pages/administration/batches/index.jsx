@@ -47,12 +47,11 @@ const batchSchema = z.object({
   name: z.string().min(1, "Batch name is required")
 })
 
-export default function BatchesPage() {
+export default function BatchesPage({ initialBatches }) {
   const router = useRouter()
   const { toast } = useToast()
-  const [batches, setBatches] = useState([])
+  const [batches, setBatches] = useState(initialBatches)
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState(null)
@@ -138,7 +137,11 @@ export default function BatchesPage() {
 
   const fetchBatches = async () => {
     try {
-      const res = await fetch('/api/administration/batches/get-batches')
+      const res = await fetch('/api/administration/batches/get-batches', {
+        headers: {
+       
+        },
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setBatches(data)
@@ -148,8 +151,6 @@ export default function BatchesPage() {
         description: "Failed to fetch batches",
         variant: "destructive"
       })
-    } finally {
-      setIsLoadingInitial(false)
     }
   }
 
@@ -158,7 +159,10 @@ export default function BatchesPage() {
       setIsLoading(true)
       const res = await fetch('/api/administration/batches/add-batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+       
+        },
         body: JSON.stringify(values)
       })
       const data = await res.json()
@@ -189,7 +193,10 @@ export default function BatchesPage() {
       setIsLoading(true)
       const res = await fetch('/api/administration/batches/edit-batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+         
+        },
         body: JSON.stringify({
           batch_id: selectedBatch.id,
           batch_name: values.name
@@ -221,7 +228,10 @@ export default function BatchesPage() {
       setIsDeleting(id)
       const res = await fetch('/api/administration/batches/delete-batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+    
+        },
         body: JSON.stringify({ batch_id: id })
       })
       const data = await res.json()
@@ -243,11 +253,7 @@ export default function BatchesPage() {
     }
   }
 
-  useEffect(() => {
-    fetchBatches()
-  }, [])
-
-  if (isLoadingInitial) {
+  if (!batches) {
     return (
       <div className="flex items-center justify-center relative mt-40">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
@@ -402,4 +408,33 @@ export default function BatchesPage() {
       </Dialog>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const response = await fetch(`http://localhost:3000/api/administration/batches/get-batches`, {
+      headers: {
+        Cookie: req.headers.cookie || ""
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch batches')
+    }
+
+    const batches = await response.json()
+
+    return {
+      props: {
+        initialBatches: batches
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialBatches: []
+      }
+    }
+  }
 }

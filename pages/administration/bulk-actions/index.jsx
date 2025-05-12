@@ -90,7 +90,10 @@ export default function BulkActionsPage() {
 
       const response = await fetch(apiEndpoints[selectedAction], {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+    
+        },
       })
 
       const data = await response.json()

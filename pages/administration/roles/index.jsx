@@ -30,15 +30,14 @@ import {
 } from "@tanstack/react-table"
 import { format } from "date-fns"
 
-export default function RolesPage() {
-  const [roles, setRoles] = useState([])
-  const [permissions, setPermissions] = useState([])
+export default function RolesPage({ initialRoles, initialPermissions }) {
+  const [roles, setRoles] = useState(initialRoles)
+  const [permissions, setPermissions] = useState(initialPermissions)
   const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
   const [newRole, setNewRole] = useState({ role: '', permissions: [] })
   const [editingRole, setEditingRole] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
@@ -138,14 +137,8 @@ export default function RolesPage() {
     },
   })
 
-  useEffect(() => {
-    fetchRoles()
-    fetchPermissions()
-  }, [])
-
   const fetchRoles = async () => {
     try {
-      setIsLoading(true)
       const response = await fetch('/api/administration/roles/get-roles')
       if (!response.ok) {
         throw new Error('Failed to fetch roles')
@@ -156,22 +149,6 @@ export default function RolesPage() {
       toast({
         title: "Error",
         description: "Failed to fetch roles",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchPermissions = async () => {
-    try {
-      const response = await fetch('/api/administration/roles/get-permissions')
-      const data = await response.json()
-      setPermissions(data)
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to fetch permissions",
         variant: "destructive",
       })
     }
@@ -302,14 +279,6 @@ export default function RolesPage() {
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center relative mt-40">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
-      </div>
-    )
   }
 
   return (
@@ -500,4 +469,45 @@ export default function RolesPage() {
       </Dialog>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const [rolesRes, permissionsRes] = await Promise.all([
+      fetch(`http://localhost:3000/api/administration/roles/get-roles`, {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }),
+      fetch(`http://localhost:3000/api/administration/roles/get-permissions`, {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      })
+    ])
+
+    if (!rolesRes.ok || !permissionsRes.ok) {
+      throw new Error('Failed to fetch data')
+    }
+
+    const [roles, permissions] = await Promise.all([
+      rolesRes.json(),
+      permissionsRes.json()
+    ])
+
+    return {
+      props: {
+        initialRoles: roles,
+        initialPermissions: permissions
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialRoles: [],
+        initialPermissions: []
+      }
+    }
+  }
 }

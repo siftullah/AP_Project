@@ -61,14 +61,53 @@ const groupSchema = z.object({
   users: z.array(z.string()).min(1, "At least one user must be selected")
 })
 
-export default function GroupsPage() {
+export async function getServerSideProps({ req }) {
+  try {
+    const [groupsRes, usersRes] = await Promise.all([
+      fetch(`http://localhost:3000/api/administration/groups/get-groups`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/groups/get-users`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      })
+    ])
+
+    const [groupsData, usersData] = await Promise.all([
+      groupsRes.json(),
+      usersRes.json()
+    ])
+
+    if (!groupsRes.ok) throw new Error(groupsData.error)
+    if (!usersRes.ok) throw new Error(usersData.error)
+
+    return {
+      props: {
+        initialGroups: groupsData.groups,
+        initialUsers: usersData.users
+      }
+    }
+  } catch (error) {
+    return {
+      props: {
+        initialGroups: [],
+        initialUsers: [],
+        error: error.message
+      }
+    }
+  }
+}
+
+export default function GroupsPage({ initialGroups, initialUsers, error }) {
   const router = useRouter()
   const { toast } = useToast()
-  const [groups, setGroups] = useState([])
+  const [groups, setGroups] = useState(initialGroups)
   const [members, setMembers] = useState([])
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState(initialUsers)
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -223,8 +262,6 @@ export default function GroupsPage() {
         description: "Failed to fetch groups",
         variant: "destructive"
       })
-    } finally {
-      setIsLoadingInitial(false)
     }
   }
 
@@ -377,17 +414,14 @@ export default function GroupsPage() {
   }
 
   useEffect(() => {
-    fetchGroups()
-    fetchUsers()
-  }, [])
-
-  if (isLoadingInitial) {
-    return (
-      <div className="flex items-center justify-center relative mt-40">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
-      </div>
-    )
-  }
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive"
+      })
+    }
+  }, [error])
 
   return (
     <div className="space-y-6">

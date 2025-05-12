@@ -58,14 +58,14 @@ const studentSchema = z.object({
   batch_id: z.string().min(1, "Batch is required")
 })
 
-export default function StudentsPage() {
+export default function StudentsPage({ initialStudents, initialDepartments, initialBatches }) {
   const router = useRouter()
   const { toast } = useToast()
-  const [students, setStudents] = useState([])
-  const [departments, setDepartments] = useState([])
-  const [batches, setBatches] = useState([])
+  const [students, setStudents] = useState(initialStudents)
+  const [departments, setDepartments] = useState(initialDepartments)
+  const [batches, setBatches] = useState(initialBatches)
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true)
+  const [isLoadingInitial, setIsLoadingInitial] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState(null)
@@ -318,12 +318,6 @@ export default function StudentsPage() {
       setIsDeleting(null)
     }
   }
-
-  useEffect(() => {
-    fetchDepartments()
-    fetchBatches()
-    fetchStudents()
-  }, [])
 
   if (isLoadingInitial) {
     return (
@@ -654,4 +648,53 @@ export default function StudentsPage() {
       </Dialog>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const [studentsRes, departmentsRes, batchesRes] = await Promise.all([
+      fetch(`http://localhost:3000/api/administration/students/get-students`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/students/get-departments`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/students/get-batches`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      })
+    ])
+
+    if (!studentsRes.ok || !departmentsRes.ok || !batchesRes.ok) {
+      throw new Error('Failed to fetch data')
+    }
+
+    const [students, departments, batches] = await Promise.all([
+      studentsRes.json(),
+      departmentsRes.json(),
+      batchesRes.json()
+    ])
+
+    return {
+      props: {
+        initialStudents: students,
+        initialDepartments: departments,
+        initialBatches: batches
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialStudents: [],
+        initialDepartments: [],
+        initialBatches: []
+      }
+    }
+  }
 }

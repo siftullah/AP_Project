@@ -58,14 +58,13 @@ const classroomSchema = z.object({
   classroom_id: z.string().nullable()
 })
 
-export default function ClassroomsPage() {
+export default function ClassroomsPage({ initialClassrooms, initialDepartments, initialBatches }) {
   const router = useRouter()
   const { toast } = useToast()
-  const [classrooms, setClassrooms] = useState([])
-  const [departments, setDepartments] = useState([])
-  const [batches, setBatches] = useState([])
+  const [classrooms, setClassrooms] = useState(initialClassrooms)
+  const [departments, setDepartments] = useState(initialDepartments)
+  const [batches, setBatches] = useState(initialBatches)
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedClassroom, setSelectedClassroom] = useState(null)
@@ -179,59 +178,15 @@ export default function ClassroomsPage() {
     }
   })
 
-  const fetchCourses = async () => {
-    try {
-      const res = await fetch('/api/administration/classrooms/get-courses')
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setDepartments(data)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch courses",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const fetchBatches = async () => {
-    try {
-      const res = await fetch('/api/administration/classrooms/get-batches')
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setBatches(data)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch batches",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const fetchClassrooms = async () => {
-    try {
-      const res = await fetch('/api/administration/classrooms/get-classrooms')
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setClassrooms(data)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch classrooms",
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoadingInitial(false)
-    }
-  }
-
   const onAddSubmit = async (values) => {
     try {
       setIsLoading(true)
       const res = await fetch('/api/administration/classrooms/add-classroom', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          
+        },
         body: JSON.stringify(values)
       })
       const data = await res.json()
@@ -242,9 +197,16 @@ export default function ClassroomsPage() {
         description: "Classroom added successfully"
       })
       setIsAddDialogOpen(false)
-      setIsLoadingInitial(true)
       addForm.reset()
-      fetchClassrooms()
+      
+      const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
+        headers: {
+          // Forward the authentication cookie from the request
+        
+        },
+      })
+      const classroomsData = await classroomsRes.json()
+      setClassrooms(classroomsData)
     } catch (error) {
       toast({
         title: "Error",
@@ -253,7 +215,6 @@ export default function ClassroomsPage() {
       })
     } finally {
       setIsLoading(false)
-      setIsLoadingInitial(false)
     }
   }
 
@@ -264,7 +225,10 @@ export default function ClassroomsPage() {
       setIsLoading(true)
       const res = await fetch('/api/administration/classrooms/edit-classroom', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+       
+        },
         body: JSON.stringify({
           ...values
         })
@@ -278,7 +242,15 @@ export default function ClassroomsPage() {
       })
       setIsEditDialogOpen(false)
       editForm.reset()
-      fetchClassrooms()
+      
+      const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
+        headers: {
+          // Forward the authentication cookie from the request
+         
+        },
+      })
+      const classroomsData = await classroomsRes.json()
+      setClassrooms(classroomsData)
     } catch (error) {
       toast({
         title: "Error",
@@ -295,7 +267,10 @@ export default function ClassroomsPage() {
       setIsDeleting(id)
       const res = await fetch('/api/administration/classrooms/delete-classroom', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+         
+        },
         body: JSON.stringify({ classroom_id: id })
       })
       const data = await res.json()
@@ -305,7 +280,15 @@ export default function ClassroomsPage() {
         title: "Success",
         description: "Classroom deleted successfully"
       })
-      fetchClassrooms()
+      
+      const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
+        headers: {
+          // Forward the authentication cookie from the request
+      
+        },
+      })
+      const classroomsData = await classroomsRes.json()
+      setClassrooms(classroomsData)
     } catch (error) {
       toast({
         title: "Error",
@@ -315,20 +298,6 @@ export default function ClassroomsPage() {
     } finally {
       setIsDeleting(null)
     }
-  }
-
-  useEffect(() => {
-    fetchCourses()
-    fetchBatches()
-    fetchClassrooms()
-  }, [])
-
-  if (isLoadingInitial) {
-    return (
-      <div className="flex items-center justify-center relative mt-40">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
-      </div>
-    )
   }
 
   return (
@@ -588,4 +557,53 @@ export default function ClassroomsPage() {
       </Dialog>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const [classroomsRes, coursesRes, batchesRes] = await Promise.all([
+      fetch(`http://localhost:3000/api/administration/classrooms/get-classrooms`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/classrooms/get-courses`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/classrooms/get-batches`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      })
+    ])
+
+    if (!classroomsRes.ok || !coursesRes.ok || !batchesRes.ok) {
+      throw new Error('Failed to fetch data')
+    }
+
+    const [classrooms, departments, batches] = await Promise.all([
+      classroomsRes.json(),
+      coursesRes.json(),
+      batchesRes.json()
+    ])
+
+    return {
+      props: {
+        initialClassrooms: classrooms,
+        initialDepartments: departments,
+        initialBatches: batches
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialClassrooms: [],
+        initialDepartments: [],
+        initialBatches: []
+      }
+    }
+  }
 }

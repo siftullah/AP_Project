@@ -9,13 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 
-export default function ForumThreadsPage() {
+export default function ForumThreadsPage({ initialForum, initialThreads }) {
   const router = useRouter()
   const { id: forumId } = router.query
 
-  const [forum, setForum] = useState(null)
-  const [threads, setThreads] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [forum, setForum] = useState(initialForum)
+  const [threads, setThreads] = useState(initialThreads)
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [threadTitle, setThreadTitle] = useState('')
@@ -27,7 +26,7 @@ export default function ForumThreadsPage() {
   const [isSavingThread, setIsSavingThread] = useState(false)
   const [isDeletingThread, setIsDeletingThread] = useState(null)
   const [showEditForumDialog, setShowEditForumDialog] = useState(false)
-  const [editForumName, setEditForumName] = useState('')
+  const [editForumName, setEditForumName] = useState(initialForum?.name || '')
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleEditForum = async () => {
@@ -187,8 +186,6 @@ export default function ForumThreadsPage() {
       setThreads(threadsData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -197,14 +194,6 @@ export default function ForumThreadsPage() {
       fetchData()
     }
   }, [forumId])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center relative mt-40">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
-      </div>
-    )
-  }
 
   if (error) {
     return <div className="text-red-500 text-center">{error}</div>
@@ -477,4 +466,49 @@ export default function ForumThreadsPage() {
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps({ req, params }) {
+  try {
+    // Fetch forum details
+    const forumResponse = await fetch(`http://localhost:3000/api/administration/forums/get-forums?forum_id=${params.id}`, {
+      headers: {
+        Cookie: req.headers.cookie || ""
+      }
+    })
+    
+    if (!forumResponse.ok) {
+      throw new Error('Failed to fetch forum details')
+    }
+    
+    const forumData = await forumResponse.json()
+
+    // Fetch threads
+    const threadsResponse = await fetch(`http://localhost:3000/api/administration/forums/get-threads?forum_id=${params.id}`, {
+      headers: {
+        Cookie: req.headers.cookie || ""
+      }
+    })
+
+    if (!threadsResponse.ok) {
+      throw new Error('Failed to fetch threads')
+    }
+
+    const threadsData = await threadsResponse.json()
+
+    return {
+      props: {
+        initialForum: forumData[0] || null,
+        initialThreads: threadsData || []
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialForum: null,
+        initialThreads: []
+      }
+    }
+  }
 }

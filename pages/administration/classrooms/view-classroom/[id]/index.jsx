@@ -87,6 +87,7 @@ export default function ViewClassroomPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+        
         },
         body: JSON.stringify({
           classroom_id: classroomId,
@@ -99,7 +100,11 @@ export default function ViewClassroomPage() {
       }
 
       // Refresh teachers list
-      const teachersResponse = await fetch(`/api/administration/classrooms/view-classroom/get-teachers?classroom_id=${classroomId}`)
+      const teachersResponse = await fetch(`/api/administration/classrooms/view-classroom/get-teachers?classroom_id=${classroomId}`, {
+        headers: {
+       
+        },
+      })
       const teachersData = await teachersResponse.json()
       setTeachers(teachersData.faculty_by_department)
       setDialogOpen(false)
@@ -119,6 +124,7 @@ export default function ViewClassroomPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+       
         },
         body: JSON.stringify({
           classroom_id: classroomId,
@@ -131,7 +137,11 @@ export default function ViewClassroomPage() {
       }
 
       // Refresh TAs list
-      const tasResponse = await fetch(`/api/administration/classrooms/view-classroom/get-teaching-assistants?classroom_id=${classroomId}`)
+      const tasResponse = await fetch(`/api/administration/classrooms/view-classroom/get-teaching-assistants?classroom_id=${classroomId}`, {
+        headers: {
+     
+        },
+      })
       const tasData = await tasResponse.json()
       setTeachingAssistants(tasData.students_by_department)
       setTaDialogOpen(false)

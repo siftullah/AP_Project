@@ -58,13 +58,12 @@ const facultySchema = z.object({
   designation: z.string().min(1, "Designation is required")
 })
 
-export default function FacultyPage() {
+export default function FacultyPage({ initialFaculty, initialDepartments }) {
   const router = useRouter()
   const { toast } = useToast()
-  const [faculty, setFaculty] = useState([])
-  const [departments, setDepartments] = useState([])
+  const [faculty, setFaculty] = useState(initialFaculty)
+  const [departments, setDepartments] = useState(initialDepartments)
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedFaculty, setSelectedFaculty] = useState(null)
@@ -172,24 +171,13 @@ export default function FacultyPage() {
     }
   })
 
-  const fetchDepartments = async () => {
-    try {
-      const res = await fetch('/api/administration/faculty/get-departments')
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setDepartments(data)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch departments",
-        variant: "destructive"
-      })
-    }
-  }
-
   const fetchFaculty = async () => {
     try {
-      const res = await fetch('/api/administration/faculty/get-faculty')
+      const res = await fetch('/api/administration/faculty/get-faculty', {
+        headers: {
+        
+        },
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setFaculty(data)
@@ -199,8 +187,6 @@ export default function FacultyPage() {
         description: "Failed to fetch faculty",
         variant: "destructive"
       })
-    } finally {
-      setIsLoadingInitial(false)
     }
   }
 
@@ -220,7 +206,6 @@ export default function FacultyPage() {
         description: "Faculty added successfully"
       })
       setIsAddDialogOpen(false)
-      setIsLoadingInitial(true)
       addForm.reset()
       fetchFaculty()
     } catch (error) {
@@ -231,7 +216,6 @@ export default function FacultyPage() {
       })
     } finally {
       setIsLoading(false)
-      setIsLoadingInitial(false)
     }
   }
 
@@ -294,19 +278,6 @@ export default function FacultyPage() {
     } finally {
       setIsDeleting(null)
     }
-  }
-
-  useEffect(() => {
-    fetchDepartments()
-    fetchFaculty()
-  }, [])
-
-  if (isLoadingInitial) {
-    return (
-      <div className="flex items-center justify-center relative mt-40">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
-      </div>
-    )
   }
 
   return (
@@ -582,4 +553,44 @@ export default function FacultyPage() {
       </Dialog>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const [facultyRes, departmentsRes] = await Promise.all([
+      fetch(`http://localhost:3000/api/administration/faculty/get-faculty`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/faculty/get-departments`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      })
+    ])
+
+    const [faculty, departments] = await Promise.all([
+      facultyRes.json(),
+      departmentsRes.json()
+    ])
+
+    if (!facultyRes.ok) throw new Error(faculty.error)
+    if (!departmentsRes.ok) throw new Error(departments.error)
+
+    return {
+      props: {
+        initialFaculty: faculty,
+        initialDepartments: departments
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error)
+    return {
+      props: {
+        initialFaculty: [],
+        initialDepartments: []
+      }
+    }
+  }
 }

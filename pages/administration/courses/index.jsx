@@ -56,13 +56,12 @@ const courseSchema = z.object({
   department_id: z.string().min(1, "Department is required")
 })
 
-export default function CoursesPage() {
+export default function CoursesPage({ initialCourses, initialDepartments }) {
   const router = useRouter()
   const { toast } = useToast()
-  const [courses, setCourses] = useState([])
-  const [departments, setDepartments] = useState([])
+  const [courses, setCourses] = useState(initialCourses)
+  const [departments, setDepartments] = useState(initialDepartments)
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState(null)
@@ -160,24 +159,13 @@ export default function CoursesPage() {
     }
   })
 
-  const fetchDepartments = async () => {
-    try {
-      const res = await fetch('/api/administration/courses/get-departments')
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setDepartments(data)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch departments",
-        variant: "destructive"
-      })
-    }
-  }
-
   const fetchCourses = async () => {
     try {
-      const res = await fetch('/api/administration/courses/get-courses')
+      const res = await fetch('/api/administration/courses/get-courses', {
+        headers: {
+         
+        },
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setCourses(data)
@@ -187,8 +175,6 @@ export default function CoursesPage() {
         description: "Failed to fetch courses",
         variant: "destructive"
       })
-    } finally {
-      setIsLoadingInitial(false)
     }
   }
 
@@ -197,7 +183,10 @@ export default function CoursesPage() {
       setIsLoading(true)
       const res = await fetch('/api/administration/courses/add-course', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        
+        },
         body: JSON.stringify({
           department_id: values.department_id,
           course_name: values.course_name,
@@ -212,7 +201,6 @@ export default function CoursesPage() {
         description: "Course added successfully"
       })
       setIsAddDialogOpen(false)
-      setIsLoadingInitial(true)
       addForm.reset()
       fetchCourses()
     } catch (error) {
@@ -223,7 +211,6 @@ export default function CoursesPage() {
       })
     } finally {
       setIsLoading(false)
-      setIsLoadingInitial(false)
     }
   }
 
@@ -234,7 +221,10 @@ export default function CoursesPage() {
       setIsLoading(true)
       const res = await fetch('/api/administration/courses/edit-course', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+         
+        },
         body: JSON.stringify({
           course_id: selectedCourse.id,
           department_id: values.department_id,
@@ -268,7 +258,10 @@ export default function CoursesPage() {
       setIsDeleting(id)
       const res = await fetch('/api/administration/courses/delete-course', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+         
+        },
         body: JSON.stringify({ course_id: id })
       })
       const data = await res.json()
@@ -288,19 +281,6 @@ export default function CoursesPage() {
     } finally {
       setIsDeleting(null)
     }
-  }
-
-  useEffect(() => {
-    fetchDepartments()
-    fetchCourses()
-  }, [])
-
-  if (isLoadingInitial) {
-    return (
-      <div className="flex items-center justify-center relative mt-40">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
-      </div>
-    )
   }
 
   return (
@@ -524,4 +504,45 @@ export default function CoursesPage() {
       </Dialog>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const [coursesResponse, departmentsResponse] = await Promise.all([
+      fetch(`http://localhost:3000/api/administration/courses/get-courses`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/courses/get-departments`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      })
+    ])
+
+    if (!coursesResponse.ok || !departmentsResponse.ok) {
+      throw new Error('Failed to fetch data')
+    }
+
+    const [courses, departments] = await Promise.all([
+      coursesResponse.json(),
+      departmentsResponse.json()
+    ])
+
+    return {
+      props: {
+        initialCourses: courses,
+        initialDepartments: departments
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialCourses: [],
+        initialDepartments: []
+      }
+    }
+  }
 }

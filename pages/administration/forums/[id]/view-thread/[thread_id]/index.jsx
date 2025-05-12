@@ -6,13 +6,12 @@ import { formatDistanceToNow } from 'date-fns'
 import { useRouter } from 'next/router'
 import { Textarea } from '@/components/ui/textarea'
 
-export default function ThreadPostsPage() {
+export default function ThreadPostsPage({ initialThread, initialPosts }) {
   const router = useRouter()
   const { id: forumId, thread_id: threadId } = router.query
 
-  const [thread, setThread] = useState(null)
-  const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [thread, setThread] = useState(initialThread)
+  const [posts, setPosts] = useState(initialPosts)
   const [error, setError] = useState(null)
   const [replyContent, setReplyContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -44,16 +43,8 @@ export default function ThreadPostsPage() {
       setPosts(postsData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
     }
   }
-
-  useEffect(() => {
-    if (forumId && threadId) {
-      fetchThreadAndPosts()
-    }
-  }, [forumId, threadId])
 
   const handleSubmitReply = async () => {
     if (!replyContent.trim()) return
@@ -202,20 +193,12 @@ export default function ThreadPostsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center relative mt-40">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-500"></div>
-      </div>
-    )
+  if (!thread) {
+    return <div className="text-center">Thread not found</div>
   }
 
   if (error) {
     return <div className="text-red-500 text-center">{error}</div>
-  }
-
-  if (!thread) {
-    return <div className="text-center">Thread not found</div>
   }
 
   return (
@@ -457,4 +440,49 @@ export default function ThreadPostsPage() {
       </Card>
     </div>
   )
+}
+
+export async function getServerSideProps({ req, params }) {
+  try {
+    // Fetch thread details
+    const threadResponse = await fetch(`http://localhost:3000/api/administration/forums/get-threads?forum_id=${params.id}&thread_id=${params.thread_id}`, {
+      headers: {
+        Cookie: req.headers.cookie || ""
+      }
+    })
+    
+    if (!threadResponse.ok) {
+      throw new Error('Failed to fetch thread details')
+    }
+    
+    const threadData = await threadResponse.json()
+
+    // Fetch posts
+    const postsResponse = await fetch(`http://localhost:3000/api/administration/forums/get-posts?thread_id=${params.thread_id}`, {
+      headers: {
+        Cookie: req.headers.cookie || ""
+      }
+    })
+    
+    if (!postsResponse.ok) {
+      throw new Error('Failed to fetch posts')
+    }
+    
+    const postsData = await postsResponse.json()
+
+    return {
+      props: {
+        initialThread: threadData[0] || null,
+        initialPosts: postsData
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialThread: null,
+        initialPosts: []
+      }
+    }
+  }
 }

@@ -37,10 +37,10 @@ import {
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
-export default function AdminManagementPage() {
-  const [admins, setAdmins] = useState([])
-  const [roles, setRoles] = useState([])
-  const [loading, setLoading] = useState(true)
+export default function AdminManagementPage({ initialAdmins, initialRoles }) {
+  const [admins, setAdmins] = useState(initialAdmins)
+  const [roles, setRoles] = useState(initialRoles)
+  const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingAdminId, setDeletingAdminId] = useState(null)
   const [newAdmin, setNewAdmin] = useState({
@@ -132,14 +132,10 @@ export default function AdminManagementPage() {
     },
   })
 
-  useEffect(() => {
-    fetchAdministrators()
-    fetchRoles()
-  }, [])
-
   const fetchRoles = async () => {
     try {
-      const response = await fetch('/api/administration/administrators/get-roles')
+      const response = await fetch('/api/administration/administrators/get-roles', {
+      })
       const data = await response.json()
       setRoles(data.filter((role) => role.role.toLowerCase() !== 'super admin'))
     } catch (error) {
@@ -154,7 +150,9 @@ export default function AdminManagementPage() {
 
   const fetchAdministrators = async () => {
     try {
-      const response = await fetch('/api/administration/administrators/get-administrators')
+      const response = await fetch('/api/administration/administrators/get-administrators', {
+  
+      })
       const data = await response.json()
       setAdmins(data)
       setLoading(false)
@@ -214,6 +212,7 @@ export default function AdminManagementPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          
         },
         body: JSON.stringify(newAdmin),
       })
@@ -270,6 +269,7 @@ export default function AdminManagementPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          
         },
         body: JSON.stringify(editAdmin),
       })
@@ -314,6 +314,7 @@ export default function AdminManagementPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          
         },
         body: JSON.stringify({ uniAdministrationId: adminId }),
       })
@@ -568,4 +569,45 @@ export default function AdminManagementPage() {
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps({ req }) {
+  try {
+    const [adminsResponse, rolesResponse] = await Promise.all([
+      fetch(`http://localhost:3000/api/administration/administrators/get-administrators`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      }),
+      fetch(`http://localhost:3000/api/administration/administrators/get-roles`, {
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      })
+    ])
+
+    if (!adminsResponse.ok || !rolesResponse.ok) {
+      throw new Error('Failed to fetch data')
+    }
+
+    const [admins, roles] = await Promise.all([
+      adminsResponse.json(),
+      rolesResponse.json()
+    ])
+
+    return {
+      props: {
+        initialAdmins: admins,
+        initialRoles: roles.filter((role) => role.role.toLowerCase() !== 'super admin')
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error)
+    return {
+      props: {
+        initialAdmins: [],
+        initialRoles: []
+      }
+    }
+  }
 }
