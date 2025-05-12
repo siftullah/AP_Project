@@ -1,5 +1,3 @@
-;
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, LogOut } from "lucide-react";
@@ -113,7 +111,7 @@ const Sidebar = ({ children, userType }) => {
           </Button>
         </div>
 
-        <Link href="/student/profile" className="p-4 border-b border-blue-100">
+        <div className="p-4 border-b border-blue-100">
           <div className="flex items-center gap-3">
             <Avatar className="border-2 border-blue-200 w-10 h-10">
               <AvatarImage src={user?.imageUrl || "/placeholder.svg"} />
@@ -126,7 +124,7 @@ const Sidebar = ({ children, userType }) => {
               <p className="text-blue-600 text-sm capitalize">{userType}</p>
             </div>
           </div>
-        </Link>
+        </div>
 
         <nav className="flex-1 space-y-1 px-3 py-6 overflow-y-auto">
           <div className="mb-4 px-3">
