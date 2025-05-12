@@ -2,7 +2,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
+  if (req.method === "GET") {
     try {
       const { userId } = getAuth(req);
       if (!userId) {
@@ -89,9 +89,7 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error("Error:", error);
-      return res
-        .status(500)
-        .json({ error: "Failed to fetch assignments data" });
+      return res.status(500).json({ error: "Failed to fetch assignments data" });
     }
   } else if (req.method === "POST") {
     try {
@@ -143,7 +141,7 @@ export default async function handler(req, res) {
               thread_id: thread.id,
               description,
               type: "main",
-              user_id: user.id,
+              user_id: userId,
               attachments: {
                 create: attachments || [],
               },
@@ -220,5 +218,7 @@ export default async function handler(req, res) {
       console.error("Error creating assignment:", error);
       return res.status(500).json({ error: "Failed to create assignment" });
     }
+  } else {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 }

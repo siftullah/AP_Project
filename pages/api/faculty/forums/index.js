@@ -7,12 +7,12 @@ export default async function handler(req, res) {
   }
   try {
     // Get current user
-    const user = await getAuth(req);
-    if (!user) {
+    const { userId } = await getAuth(req);
+    if (!userId) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Get student details including department and batch info
+    // Get faculty details including department info
     const faculty = await prisma.faculty.findFirst({
       where: { user_id: userId },
       include: {
