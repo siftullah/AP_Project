@@ -3,9 +3,11 @@ import { formatDistanceToNow } from "date-fns";
 import { FileText, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 
 const AnnouncementCard = ({ announcements }) => {
   const router = useRouter();
+  const pathname = usePathname();
 
   if (!announcements.length) {
     return (
@@ -20,8 +22,8 @@ const AnnouncementCard = ({ announcements }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {announcements.map((announcement) => (
-        <Card 
-          key={announcement.id} 
+        <Card
+          key={announcement.id}
           className="overflow-hidden border-l-4 border-l-green-500 hover:shadow-md transition-shadow"
         >
           <CardContent className="p-0">
@@ -39,8 +41,10 @@ const AnnouncementCard = ({ announcements }) => {
                   </p>
                 </div>
               </div>
-              
-              <p className="text-gray-700 mb-4 line-clamp-2">{announcement.description}</p>
+
+              <p className="text-gray-700 mb-4 line-clamp-2">
+                {announcement.description}
+              </p>
             </div>
 
             <div className="border-t border-gray-100 p-4 bg-gray-50">
@@ -50,13 +54,14 @@ const AnnouncementCard = ({ announcements }) => {
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">
-                        {announcement.attachments.length} attachment{announcement.attachments.length !== 1 ? 's' : ''}
+                        {announcement.attachments.length} attachment
+                        {announcement.attachments.length !== 1 ? "s" : ""}
                       </span>
                     </div>
                   )}
                 </div>
                 <Button
-                  onClick={() => router.push(`/faculty/announcements/${announcement.id}`)}
+                  onClick={() => router.push(`${pathname}/${announcement.id}`)}
                   variant="outline"
                   className="border-gray-200 text-gray-700 hover:bg-gray-50"
                 >

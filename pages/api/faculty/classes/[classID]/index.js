@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
     const classroom = await prisma.classroom.findFirst({
       where: {
-        id: params.classID,
+        id: req.query.classID,
         teachers: {
           some: {
             user_id: userId,

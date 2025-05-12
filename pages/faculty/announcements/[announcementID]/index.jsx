@@ -1,5 +1,3 @@
-;
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +21,11 @@ const AnnouncementPage = () => {
   useEffect(() => {
     const fetchAnnouncementDetails = async () => {
       if (!announcementID) return;
-      
+
       try {
-        const { data } = await axios.get(`/api/faculty/announcements/${announcementID}`);
+        const { data } = await axios.get(
+          `/api/faculty/announcements/${announcementID}`
+        );
         setAnnouncementData(data);
       } catch (error) {
         console.error("Failed to fetch announcement:", error);
@@ -43,22 +43,27 @@ const AnnouncementPage = () => {
     setIsSubmitting(true);
 
     try {
-      await axios.post(`/api/faculty/announcements/${announcementID}/post-reply`, {
-        reply
-      });
-      
+      await axios.post(
+        `/api/faculty/announcements/${announcementID}/post-reply`,
+        {
+          reply,
+        }
+      );
+
       setReply("");
       toast.success("Reply posted successfully!");
-      
+
       // Refresh announcement data
-      const { data } = await axios.get(`/api/faculty/announcements/${announcementID}`);
+      const { data } = await axios.get(
+        `/api/faculty/announcements/${announcementID}`
+      );
       setAnnouncementData(data);
     } catch (error) {
       console.error("Failed to post reply:", error);
       toast.error(
-        error.response?.data?.error || 
-        error.message || 
-        "An error occurred while posting your reply."
+        error.response?.data?.error ||
+          error.message ||
+          "An error occurred while posting your reply."
       );
     } finally {
       setIsSubmitting(false);

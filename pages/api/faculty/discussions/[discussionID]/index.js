@@ -12,12 +12,12 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    const discussionId = req.params.discussionID;
+    const { discussionID } = req.query;
 
     // Get annoucement details
     const thread = await prisma.thread.findFirst({
       where: {
-        id: discussionId,
+        id: discussionID,
       },
       include: {
         posts: {

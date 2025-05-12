@@ -1,8 +1,6 @@
-;
-
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, MessageSquare } from "lucide-react";
@@ -17,16 +15,14 @@ const safeFormatDistanceToNow = (dateString) => {
   return formatDistanceToNow(date, { addSuffix: true });
 };
 
-const ForumPage = ({ forumId }) => {
+const ForumPage = () => {
   const [forumData, setForumData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
-  const pathname = usePathname();
-  const isFacultyRoute = pathname.startsWith("/faculty");
-  const basePath = isFacultyRoute
-    ? "/faculty/discussions"
-    : "/student/discussions";
+  const basePath = "/faculty/discussions";
+
+  const { forumId } = router.query;
 
   useEffect(() => {
     const fetchForumData = async () => {
@@ -55,7 +51,10 @@ const ForumPage = ({ forumId }) => {
         <div className="absolute bottom-0 -left-40 w-[500px] h-[300px] bg-gradient-to-tr from-cyan-100/20 via-blue-100/20 to-transparent rounded-full blur-[100px] z-0" />
       </div>
       <div className="relative w-full max-w-6xl mx-auto z-10">
-        <Button onClick={() => router.back()} className="flex items-center mb-6">
+        <Button
+          onClick={() => router.back()}
+          className="flex items-center mb-6"
+        >
           <ArrowLeftIcon className="mr-2 w-4 h-4" />
           Back
         </Button>
@@ -64,7 +63,9 @@ const ForumPage = ({ forumId }) => {
           <CardHeader>
             <div className="flex items-center gap-6">
               <Avatar className="w-16 h-16 border-4 border-blue-200/70 shadow">
-                <AvatarImage src={`/avatars/${forumData?.created_by || "default"}.png`} />
+                <AvatarImage
+                  src={`/avatars/${forumData?.created_by || "default"}.png`}
+                />
                 <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl">
                   {forumData?.created_by?.[0]?.toUpperCase() || "?"}
                 </AvatarFallback>
@@ -74,7 +75,10 @@ const ForumPage = ({ forumId }) => {
                   {forumData?.forum_name || "Forum Threads"}
                 </CardTitle>
                 <div className="text-sm text-slate-500 mt-1">
-                  Created by <span className="font-semibold">{forumData?.created_by || "Unknown"}</span>
+                  Created by{" "}
+                  <span className="font-semibold">
+                    {forumData?.created_by || "Unknown"}
+                  </span>
                   <span className="mx-2">•</span>
                   {safeFormatDistanceToNow(forumData?.created_at)}
                 </div>
@@ -82,7 +86,9 @@ const ForumPage = ({ forumId }) => {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-slate-700 mt-4 text-lg">{forumData?.description}</p>
+            <p className="text-slate-700 mt-4 text-lg">
+              {forumData?.description}
+            </p>
           </CardContent>
         </Card>
 
@@ -90,7 +96,9 @@ const ForumPage = ({ forumId }) => {
         <div>
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Threads</h2>
           {!forumData?.threads?.length && (
-            <div className="text-center text-slate-400 py-8">No threads yet.</div>
+            <div className="text-center text-slate-400 py-8">
+              No threads yet.
+            </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {forumData?.threads?.map((thread) => (
@@ -98,7 +106,9 @@ const ForumPage = ({ forumId }) => {
                 <Card className="group hover:shadow-2xl transition-all duration-200 border-0 bg-white/90 rounded-2xl overflow-hidden flex flex-col h-full">
                   <CardHeader className="flex flex-row items-center gap-4 pb-2">
                     <Avatar className="w-12 h-12 border-2 border-blue-200/70 shadow">
-                      <AvatarImage src={`/avatars/${thread.author || "default"}.png`} />
+                      <AvatarImage
+                        src={`/avatars/${thread.author || "default"}.png`}
+                      />
                       <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
                         {thread.author?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>
@@ -118,7 +128,9 @@ const ForumPage = ({ forumId }) => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-slate-600 line-clamp-2">{thread.description}</p>
+                    <p className="text-slate-600 line-clamp-2">
+                      {thread.description}
+                    </p>
                   </CardContent>
                 </Card>
               </Link>
@@ -128,14 +140,6 @@ const ForumPage = ({ forumId }) => {
       </div>
     </div>
   );
-};
-
-export const getServerSideProps = async ({ params }) => {
-  return {
-    props: {
-      forumId: params.forumId
-    }
-  };
 };
 
 export default ForumPage;

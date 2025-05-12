@@ -1,5 +1,3 @@
-;
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -198,9 +196,7 @@ const ThreadPage = () => {
                   className="mb-2"
                   required
                 />
-                <Button type="submit">
-                  Post Reply
-                </Button>
+                <Button type="submit">Post Reply</Button>
               </form>
             </div>
           </div>

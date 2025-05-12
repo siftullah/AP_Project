@@ -1,13 +1,15 @@
-import { getAuth } from "@clerk/nextjs/server ";
+import { getAuth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
+  if (req.method === "GET") {
     try {
       const { userId } = getAuth(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthenticated User" });
       }
+
+      const { assignmentID } = req.query;
 
       const faculty = await prisma.faculty.findUnique({
         where: { user_id: userId },

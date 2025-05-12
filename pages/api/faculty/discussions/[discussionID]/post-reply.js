@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    const discussionId = req.params.discussionID;
+    const { discussionID } = req.query;
 
     const { reply } = req.body;
 
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         },
         thread: {
           connect: {
-            id: discussionId,
+            id: discussionID,
           },
         },
       },

@@ -1,13 +1,6 @@
-;
-
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useRouter } from "next/router";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +10,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 
-const DiscussionPage = ({ discussionID }) => {
+const DiscussionPage = () => {
   const router = useRouter();
   const [discussion, setDiscussion] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,10 +18,14 @@ const DiscussionPage = ({ discussionID }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { discussionID } = router.query;
+
   useEffect(() => {
     const fetchDiscussion = async () => {
       try {
-        const { data } = await axios.get(`/api/faculty/discussions/${discussionID}`);
+        const { data } = await axios.get(
+          `/api/faculty/discussions/${discussionID}`
+        );
         setDiscussion(data);
         setIsLoading(false);
       } catch (error) {
@@ -48,12 +45,14 @@ const DiscussionPage = ({ discussionID }) => {
       await axios.post(`/api/faculty/discussions/${discussionID}/post-reply`, {
         reply,
       });
-      
+
       setReply("");
       toast.success("Reply posted successfully!");
-      
+
       // Refresh discussion data
-      const { data } = await axios.get(`/api/faculty/discussions/${discussionID}`);
+      const { data } = await axios.get(
+        `/api/faculty/discussions/${discussionID}`
+      );
       setDiscussion(data);
     } catch (error) {
       toast.error("Failed to post reply. Please try again.");
@@ -89,7 +88,9 @@ const DiscussionPage = ({ discussionID }) => {
       <Card className="rounded-xl border border-blue-100 shadow-md">
         <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-xl px-6 py-4">
           <h1 className="text-xl md:text-2xl font-bold">{discussion.title}</h1>
-          <p className="text-sm text-blue-100">Created by {discussion.main_post.created_by}</p>
+          <p className="text-sm text-blue-100">
+            Created by {discussion.main_post.created_by}
+          </p>
         </div>
 
         <CardContent className="space-y-4 pt-6 pb-4 px-6">
@@ -128,7 +129,10 @@ const DiscussionPage = ({ discussionID }) => {
                   className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg"
                 >
                   <Avatar>
-                    <AvatarImage src="/placeholder-user.jpg" alt={reply.created_by} />
+                    <AvatarImage
+                      src="/placeholder-user.jpg"
+                      alt={reply.created_by}
+                    />
                     <AvatarFallback>{reply.created_by[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -142,7 +146,9 @@ const DiscussionPage = ({ discussionID }) => {
                 </div>
               ))}
               {filteredReplies?.length === 0 && (
-                <p className="text-slate-500 text-sm italic">No matching replies found.</p>
+                <p className="text-slate-500 text-sm italic">
+                  No matching replies found.
+                </p>
               )}
             </div>
           </div>

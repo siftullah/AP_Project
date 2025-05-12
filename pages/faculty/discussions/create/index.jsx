@@ -1,7 +1,5 @@
-;
-
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -39,7 +37,9 @@ const CreateDiscussion = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const { data } = await axios.get("/api/faculty/discussions/available-groups");
+        const { data } = await axios.get(
+          "/api/faculty/discussions/available-groups"
+        );
         setGroups(data);
         setGroupsLoading(false);
       } catch (error) {
@@ -118,7 +118,9 @@ const CreateDiscussion = () => {
       <ToastContainer />
       <Card className="rounded-xl border border-blue-100 shadow-md">
         <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-xl px-6 py-4">
-          <h1 className="text-xl md:text-2xl font-bold">Create New Discussion</h1>
+          <h1 className="text-xl md:text-2xl font-bold">
+            Create New Discussion
+          </h1>
         </div>
         <CardContent className="p-6 space-y-6">
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -141,7 +143,10 @@ const CreateDiscussion = () => {
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, description: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
                 }
                 placeholder="Enter discussion description"
                 required
@@ -253,7 +258,9 @@ const CreateDiscussion = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name..."
                   />
-                  {searchLoading && <div className="text-sm text-gray-500">Searching...</div>}
+                  {searchLoading && (
+                    <div className="text-sm text-gray-500">Searching...</div>
+                  )}
                   {searchResults.length > 0 && (
                     <div className="mt-2 p-2 border rounded-md max-h-48 overflow-y-auto space-y-2">
                       {searchResults.map((user) => (
@@ -292,7 +299,11 @@ const CreateDiscussion = () => {
             </div>
 
             <div className="pt-4">
-              <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
                 {isSubmitting ? "Creating..." : "Create Discussion"}
               </Button>
             </div>

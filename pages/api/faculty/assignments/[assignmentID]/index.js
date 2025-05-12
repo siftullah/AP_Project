@@ -2,7 +2,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
+  if (req.method === "GET") {
     try {
       const { userId } = getAuth(req);
       if (!userId) {
@@ -125,6 +125,8 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: "Unauthenticated User" });
       }
 
+      const assignmentID = req.query.assignmentID;
+
       const faculty = await prisma.faculty.findUnique({
         where: { user_id: userId },
       });
@@ -177,7 +179,7 @@ export default async function handler(req, res) {
 
           // Update assignment
           prisma.assignment.update({
-            where: { id: params.assignmentID },
+            where: { id: assignmentID },
             data: {
               due_date: new Date(dueDate),
               total_marks: parseFloat(totalMarks),
@@ -227,10 +229,13 @@ export default async function handler(req, res) {
           })) || [],
       };
 
-      return NextResponse.json(formattedResponse);
+      return res.status(200).json(formattedResponse);
     } catch (error) {
       console.error("Error updating assignment:", error);
       return res.status(500).json({ error: "Failed to update assignment" });
     }
   }
+
+  // Handle unsupported methods
+  return res.status(405).json({ error: "Method not allowed" });
 }
