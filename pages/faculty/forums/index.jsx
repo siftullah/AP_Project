@@ -1,21 +1,25 @@
-"use client";
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ForumCard from "@/components/ForumCard";
-import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import type { ForumList } from "@/app/types/forum";
-
-const fetchForums = async (): Promise<ForumList> => {
-  const { data } = await axios.get("/api/faculty/forums");
-  return data;
-};
 
 const Forums = () => {
-  const { data, isLoading } = useQuery({
-    queryKey: ["forums"],
-    queryFn: fetchForums,
-  });
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchForums = async () => {
+      try {
+        const response = await axios.get("/api/faculty/forums");
+        setData(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching forums:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchForums();
+  }, []);
 
   if (isLoading) {
     return <div className="px-4 sm:px-0 py-6">Loading...</div>;

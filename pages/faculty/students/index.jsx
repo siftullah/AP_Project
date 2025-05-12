@@ -1,6 +1,6 @@
-"use client";
+;
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,44 +20,49 @@ import {
 } from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
-import type { StudentData } from "@/app/faculty/types/students";
-
-const fetchStudentsData = async (): Promise<StudentData> => {
-  const { data } = await axios.get("/api/faculty/students");
-  return data;
-};
-
-const removeStudent = async (enrollmentId: string) => {
-  const { data } = await axios.delete("/api/faculty/students/remove", {
-    data: { enrollmentId },
-  });
-  return data;
-};
 
 const FacultyStudentsContent = () => {
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["students"],
-    queryFn: fetchStudentsData,
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: removeStudent,
-    onSuccess: () => {
-      toast.success("Student removed successfully");
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-    },
-    onError: () => {
-      toast.error("Failed to remove student");
-    },
-  });
-
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [filter, setFilter] = useState(searchParams.get("classId") || "all");
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await axios.get("/api/faculty/students");
+        setData(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  const handleRemoveStudent = async (studentId) => {
+    setIsRemoving(true);
+    try {
+      await axios.delete("/api/faculty/students/remove", {
+        data: { enrollmentId: studentId },
+      });
+      toast.success("Student removed successfully");
+      
+      // Refresh students data
+      const response = await axios.get("/api/faculty/students");
+      setData(response.data);
+    } catch (error) {
+      console.error("Error removing student:", error);
+      toast.error("Failed to remove student");
+    } finally {
+      setIsRemoving(false);
+    }
+  };
 
   const filteredStudents =
     data?.students.filter((student) =>
@@ -105,10 +110,10 @@ const FacultyStudentsContent = () => {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => removeMutation.mutate(student.id)}
-                    disabled={removeMutation.isPending}
+                    onClick={() => handleRemoveStudent(student.id)}
+                    disabled={isRemoving}
                   >
-                    {removeMutation.isPending ? "Removing..." : "Remove"}
+                    {isRemoving ? "Removing..." : "Remove"}
                   </Button>
                 </TableCell>
               </TableRow>

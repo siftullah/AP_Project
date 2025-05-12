@@ -1,8 +1,10 @@
+;
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FacultyDashboard } from "./_components/FacultyDashboard";
 
-export default function Page() {
+const FacultyPage = () => {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,4 +32,6 @@ export default function Page() {
   }
 
   return <FacultyDashboard data={data} />;
-}
+};
+
+export default FacultyPage;

@@ -1,68 +1,57 @@
-"use client";
+;
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToastContainer, toast } from "react-toastify";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
-import type { Profile, ProfileUpdateData } from "@/app/faculty/types/profile";
-
-const fetchProfile = async (): Promise<Profile> => {
-  const { data } = await axios.get("/api/faculty/profile");
-  return data;
-};
-
-const updateProfile = async (formData: ProfileUpdateData): Promise<Profile> => {
-  const { data } = await axios.put("/api/faculty/profile", formData);
-  return data;
-};
 
 const Profile = () => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [formData, setFormData] = React.useState<ProfileUpdateData>({
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
   });
-
-  const queryClient = useQueryClient();
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["facultyProfile"],
-    queryFn: fetchProfile,
-  });
+  const [profileData, setProfileData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (data) {
-      setFormData({
-        first_name: data.first_name,
-        last_name: data.last_name,
-      });
-    }
-  }, [data]);
+    const fetchProfile = async () => {
+      try {
+        const { data } = await axios.get("/api/faculty/profile");
+        setProfileData(data);
+        setFormData({
+          first_name: data.first_name,
+          last_name: data.last_name,
+        });
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setIsLoading(false);
+      }
+    };
 
-  const mutation = useMutation({
-    mutationFn: updateProfile,
-    onSuccess: (data) => {
-      queryClient.setQueryData(["facultyProfile"], data);
+    fetchProfile();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await axios.put("/api/faculty/profile", formData);
+      setProfileData(data);
       setIsEditing(false);
       toast.success("Profile updated successfully");
-    },
-    onError: () => {
+    } catch (error) {
+      console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
-    },
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate(formData);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -70,7 +59,7 @@ const Profile = () => {
   };
 
   if (isLoading) return <div>Loading...</div>;
-  if (!data) return null;
+  if (!profileData) return null;
 
   return (
     <div className="px-4 sm:px-0 py-6">
@@ -84,12 +73,12 @@ const Profile = () => {
           <CardContent className="flex flex-col items-center">
             <Avatar className="mb-4 w-32 h-32">
               <AvatarImage
-                src={`https://api.dicebear.com/7.x/initials/svg?seed=${data.first_name} ${data.last_name}`}
-                alt={`${data.first_name} ${data.last_name}`}
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${profileData.first_name} ${profileData.last_name}`}
+                alt={`${profileData.first_name} ${profileData.last_name}`}
               />
               <AvatarFallback>
-                {data.first_name[0]}
-                {data.last_name[0]}
+                {profileData.first_name[0]}
+                {profileData.last_name[0]}
               </AvatarFallback>
             </Avatar>
           </CardContent>
@@ -111,7 +100,7 @@ const Profile = () => {
                   <Input
                     id="first_name"
                     name="first_name"
-                    value={isEditing ? formData.first_name : data.first_name}
+                    value={isEditing ? formData.first_name : profileData.first_name}
                     onChange={handleChange}
                     disabled={!isEditing}
                   />
@@ -121,26 +110,26 @@ const Profile = () => {
                   <Input
                     id="last_name"
                     name="last_name"
-                    value={isEditing ? formData.last_name : data.last_name}
+                    value={isEditing ? formData.last_name : profileData.last_name}
                     onChange={handleChange}
                     disabled={!isEditing}
                   />
                 </div>
                 <div>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" value={data.email} disabled />
+                  <Input id="email" value={profileData.email} disabled />
                 </div>
                 <div>
                   <Label htmlFor="designation">Designation</Label>
-                  <Input id="designation" value={data.designation} disabled />
+                  <Input id="designation" value={profileData.designation} disabled />
                 </div>
                 <div>
                   <Label htmlFor="department">Department</Label>
-                  <Input id="department" value={data.department} disabled />
+                  <Input id="department" value={profileData.department} disabled />
                 </div>
                 <div>
                   <Label htmlFor="university">University</Label>
-                  <Input id="university" value={data.university} disabled />
+                  <Input id="university" value={profileData.university} disabled />
                 </div>
               </div>
               {isEditing && (

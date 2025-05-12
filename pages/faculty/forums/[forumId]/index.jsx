@@ -1,4 +1,4 @@
-"use client";
+;
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -8,16 +8,17 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import axios from "axios";
 
-const safeFormatDistanceToNow = (dateString: string | undefined | null) => {
+const safeFormatDistanceToNow = (dateString) => {
   if (!dateString) return "Unknown date";
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return "Unknown date";
   return formatDistanceToNow(date, { addSuffix: true });
 };
 
-const ForumPage = ({ params }: { params: { forumId: string } }) => {
-  const [forumData, setForumData] = useState<any>(null);
+const ForumPage = ({ forumId }) => {
+  const [forumData, setForumData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
@@ -30,8 +31,7 @@ const ForumPage = ({ params }: { params: { forumId: string } }) => {
   useEffect(() => {
     const fetchForumData = async () => {
       try {
-        const response = await fetch(`/api/faculty/forums/${params.forumId}`);
-        const data = await response.json();
+        const { data } = await axios.get(`/api/faculty/forums/${forumId}`);
         setForumData(data);
         setLoading(false);
       } catch (error) {
@@ -41,7 +41,7 @@ const ForumPage = ({ params }: { params: { forumId: string } }) => {
     };
 
     fetchForumData();
-  }, [params.forumId]);
+  }, [forumId]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -93,7 +93,7 @@ const ForumPage = ({ params }: { params: { forumId: string } }) => {
             <div className="text-center text-slate-400 py-8">No threads yet.</div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {forumData?.threads?.map((thread: any) => (
+            {forumData?.threads?.map((thread) => (
               <Link key={thread.id} href={`${basePath}/${thread.id}`}>
                 <Card className="group hover:shadow-2xl transition-all duration-200 border-0 bg-white/90 rounded-2xl overflow-hidden flex flex-col h-full">
                   <CardHeader className="flex flex-row items-center gap-4 pb-2">
@@ -128,6 +128,14 @@ const ForumPage = ({ params }: { params: { forumId: string } }) => {
       </div>
     </div>
   );
+};
+
+export const getServerSideProps = async ({ params }) => {
+  return {
+    props: {
+      forumId: params.forumId
+    }
+  };
 };
 
 export default ForumPage;

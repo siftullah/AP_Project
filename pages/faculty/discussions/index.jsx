@@ -1,5 +1,6 @@
-"use client";
+;
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
@@ -12,23 +13,29 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import type { DiscussionsData, Discussion } from "@/app/types/discussions";
-
-const fetchDiscussions = async (): Promise<DiscussionsData> => {
-  const { data } = await axios.get("/api/faculty/discussions");
-  return data;
-};
 
 const Discussions = () => {
   const router = useRouter();
-  const { data, isLoading } = useQuery({
-    queryKey: ["discussions"],
-    queryFn: fetchDiscussions,
-  });
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filterDiscussions = (category: string) => {
+  useEffect(() => {
+    const fetchDiscussions = async () => {
+      try {
+        const response = await axios.get("/api/faculty/discussions");
+        setData(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching discussions:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchDiscussions();
+  }, []);
+
+  const filterDiscussions = (category) => {
     if (!data?.threads) return [];
     if (category === "All") return data.threads;
     return data.threads.filter((d) => d.type === category.toLowerCase());
@@ -90,7 +97,7 @@ const Discussions = () => {
   );
 };
 
-const DiscussionCard = ({ discussions }: { discussions: Discussion[] }) => {
+const DiscussionCard = ({ discussions }) => {
   const pathname = usePathname();
 
   if (!discussions.length) {
@@ -140,6 +147,5 @@ const DiscussionCard = ({ discussions }: { discussions: Discussion[] }) => {
     </div>
   );
 };
-
 
 export default Discussions;

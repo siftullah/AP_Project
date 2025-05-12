@@ -1,8 +1,7 @@
-"use client";
+;
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -19,67 +18,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import type {
-  AvailableGroups,
-  SearchResult,
-  CreateDiscussionData,
-} from "@/app/types/discussions";
-
-const fetchAvailableGroups = async (): Promise<AvailableGroups> => {
-  const { data } = await axios.get("/api/faculty/discussions/available-groups");
-  return data;
-};
-
-const searchStudents = async (query: string): Promise<SearchResult[]> => {
-  if (!query) return [];
-  const { data } = await axios.get(
-    `/api/faculty/discussions/search-students?query=${query}`
-  );
-  return data.students;
-};
 
 const CreateDiscussion = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState<CreateDiscussionData>({
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
     type: "general",
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState([]);
   const [newGroupName, setNewGroupName] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState(null);
+  const [groups, setGroups] = useState(null);
+  const [groupsLoading, setGroupsLoading] = useState(true);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: groups, isLoading: groupsLoading } = useQuery({
-    queryKey: ["availableGroups"],
-    queryFn: fetchAvailableGroups,
-  });
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const { data } = await axios.get("/api/faculty/discussions/available-groups");
+        setGroups(data);
+        setGroupsLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch groups:", error);
+        setGroupsLoading(false);
+      }
+    };
+    fetchGroups();
+  }, []);
 
-  const { data: searchResults = [], isLoading: searchLoading } = useQuery({
-    queryKey: ["searchStudents", searchQuery],
-    queryFn: () => searchStudents(searchQuery),
-    enabled: searchQuery.length > 0,
-  });
+  useEffect(() => {
+    const searchStudents = async () => {
+      if (!searchQuery) {
+        setSearchResults([]);
+        return;
+      }
+      setSearchLoading(true);
+      try {
+        const { data } = await axios.get(
+          `/api/faculty/discussions/search-students?query=${searchQuery}`
+        );
+        setSearchResults(data.students);
+      } catch (error) {
+        console.error("Failed to search students:", error);
+      }
+      setSearchLoading(false);
+    };
 
-  const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const response = await axios.post(
-        "/api/faculty/discussions/create",
-        data
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Discussion created successfully");
-      router.push("/faculty/discussions");
-    },
-    onError: () => {
-      toast.error("Failed to create discussion");
-    },
-  });
+    const timeoutId = setTimeout(searchStudents, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formDataToSend = new FormData();
 
     formDataToSend.append("title", formData.title);
@@ -105,7 +100,15 @@ const CreateDiscussion = () => {
       formDataToSend.append("attachment", file);
     }
 
-    mutation.mutate(formDataToSend);
+    try {
+      await axios.post("/api/faculty/discussions/create", formDataToSend);
+      toast.success("Discussion created successfully");
+      router.push("/faculty/discussions");
+    } catch (error) {
+      toast.error("Failed to create discussion");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (groupsLoading) return <div className="text-center py-10">Loading...</div>;
@@ -149,7 +152,7 @@ const CreateDiscussion = () => {
               <Label htmlFor="type">Type</Label>
               <Select
                 onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, type: value as CreateDiscussionData["type"] }))
+                  setFormData((prev) => ({ ...prev, type: value }))
                 }
                 defaultValue="general"
               >
@@ -289,8 +292,8 @@ const CreateDiscussion = () => {
             </div>
 
             <div className="pt-4">
-              <Button type="submit" disabled={mutation.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
-                {mutation.isPending ? "Creating..." : "Create Discussion"}
+              <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                {isSubmitting ? "Creating..." : "Create Discussion"}
               </Button>
             </div>
           </form>

@@ -1,6 +1,6 @@
-"use client";
+;
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -14,77 +14,52 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeftIcon, FileIcon, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 
-interface Discussion {
-  id: string;
-  title: string;
-  main_post: Post;
-  replies?: Post[];
-}
-
-interface Post {
-  id: string;
-  description: string;
-  created_by: string;
-  attachments?: {
-    id: string;
-    filename: string;
-    filepath: string;
-  }[];
-}
-
-const fetchDiscussion = async (id: string): Promise<Discussion> => {
-  const { data } = await axios.get(`/api/faculty/discussions/${id}`);
-  return data;
-};
-
-const postReply = async ({
-  discussionId,
-  reply,
-}: {
-  discussionId: string;
-  reply: string;
-}) => {
-  const { data } = await axios.post(
-    `/api/faculty/discussions/${discussionId}/post-reply`,
-    {
-      reply,
-    }
-  );
-  return data;
-};
-
-const DiscussionPage = ({ params }: { params: { discussionID: string } }) => {
+const DiscussionPage = ({ discussionID }) => {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [discussion, setDiscussion] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [reply, setReply] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: discussion, isLoading } = useQuery({
-    queryKey: ["discussion", params.discussionID],
-    queryFn: () => fetchDiscussion(params.discussionID),
-  });
+  useEffect(() => {
+    const fetchDiscussion = async () => {
+      try {
+        const { data } = await axios.get(`/api/faculty/discussions/${discussionID}`);
+        setDiscussion(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching discussion:", error);
+        setIsLoading(false);
+      }
+    };
 
-  const mutation = useMutation({
-    mutationFn: () => postReply({ discussionId: params.discussionID, reply }),
-    onSuccess: () => {
+    fetchDiscussion();
+  }, [discussionID]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      await axios.post(`/api/faculty/discussions/${discussionID}/post-reply`, {
+        reply,
+      });
+      
       setReply("");
       toast.success("Reply posted successfully!");
-      queryClient.invalidateQueries({
-        queryKey: ["discussion", params.discussionID],
-      });
-    },
-    onError: () => {
+      
+      // Refresh discussion data
+      const { data } = await axios.get(`/api/faculty/discussions/${discussionID}`);
+      setDiscussion(data);
+    } catch (error) {
       toast.error("Failed to post reply. Please try again.");
-    },
-  });
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    mutation.mutate();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredReplies = discussion?.replies?.filter((reply) =>
@@ -183,10 +158,10 @@ const DiscussionPage = ({ params }: { params: { discussionID: string } }) => {
             <div>
               <Button
                 type="submit"
-                disabled={mutation.isPending || !reply.trim()}
+                disabled={isSubmitting || !reply.trim()}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                {mutation.isPending ? "Posting..." : "Post Reply"}
+                {isSubmitting ? "Posting..." : "Post Reply"}
               </Button>
             </div>
           </form>
