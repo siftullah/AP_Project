@@ -1,5 +1,3 @@
-;
-
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -32,11 +30,21 @@ const createClassPost = async (formData, classId) => {
   return data;
 };
 
-const CreateClassPost = ({ params }) => {
+const CreateClassPost = ({ classDetails, error }) => {
   const router = useRouter();
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (error) {
+    return (
+      <div className="px-4 sm:px-0 py-6">
+        <div className="text-center text-gray-500">
+          Failed to load class details. Please try again later.
+        </div>
+      </div>
+    );
+  }
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
@@ -67,9 +75,9 @@ const CreateClassPost = ({ params }) => {
         formData.append("attachment", file);
       }
 
-      await createClassPost(formData, params.classID);
+      await createClassPost(formData, classDetails.id);
       toast.success("Post created successfully");
-      router.push(`/faculty/classes/${params.classID}`);
+      router.push(`/faculty/classes/${classDetails.id}`);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to create post");
@@ -175,6 +183,33 @@ const CreateClassPost = ({ params }) => {
       </Card>
     </div>
   );
+};
+
+export const getServerSideProps = async ({ req, params }) => {
+  try {
+    const { data } = await axios.get(
+      `http://localhost:3000/api/faculty/classes/${params.classID}`,
+      {
+        headers: {
+          Cookie: req.headers.cookie || "",
+        },
+      }
+    );
+
+    return {
+      props: {
+        classDetails: data,
+        error: null,
+      },
+    };
+  } catch (err) {
+    return {
+      props: {
+        classDetails: null,
+        error: err.message || "An error occurred",
+      },
+    };
+  }
 };
 
 export default CreateClassPost;
