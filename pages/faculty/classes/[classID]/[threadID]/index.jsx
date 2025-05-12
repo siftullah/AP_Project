@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,31 +16,24 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import Loader from "./_components/Loader";
 
-const ThreadPage = () => {
+const ThreadPage = ({ thread, error }) => {
   const [reply, setReply] = useState("");
-  const [thread, setThread] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { classID, threadID } = router.query;
 
-  const fetchThread = async () => {
-    try {
-      const { data } = await axios.get(
-        `/api/faculty/classes/${classID}/${threadID}`
-      );
-      setThread(data);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching thread:", error);
-      setIsLoading(false);
-    }
-  };
+  if (error) {
+    return (
+      <div className="px-4 sm:px-0 py-6">
+        <div className="text-center text-gray-500">
+          Failed to load thread. Please try again later.
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (classID && threadID) {
-      fetchThread();
-    }
-  }, [classID, threadID]);
+  if (!thread) {
+    return <Loader />;
+  }
 
   const handleSubmitReply = async (e) => {
     e.preventDefault();
@@ -51,20 +44,12 @@ const ThreadPage = () => {
       );
       setReply("");
       toast.success("Reply posted successfully");
-      fetchThread();
+      router.replace(router.asPath);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to post reply");
     }
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (!thread) {
-    return null;
-  }
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString("en-US", {
@@ -204,6 +189,33 @@ const ThreadPage = () => {
       </Card>
     </div>
   );
+};
+
+export const getServerSideProps = async ({ req, params }) => {
+  try {
+    const { data } = await axios.get(
+      `http://localhost:3000/api/faculty/classes/${params.classID}/${params.threadID}`,
+      {
+        headers: {
+          Cookie: req.headers.cookie || ''
+        }
+      }
+    );
+
+    return {
+      props: {
+        thread: data,
+        error: null
+      }
+    };
+  } catch (err) {
+    return {
+      props: {
+        thread: null,
+        error: err.message || "An error occurred"
+      }
+    };
+  }
 };
 
 export default ThreadPage;

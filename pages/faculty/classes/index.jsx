@@ -1,44 +1,11 @@
-;
-
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Loader2, Users, BookOpen, CheckSquare, ChevronRight } from "lucide-react";
-import { toast } from "react-toastify";
+import { Users, BookOpen, CheckSquare, ChevronRight } from "lucide-react";
 import axios from "axios";
 
-const Classes = () => {
-  const [classes, setClasses] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        setIsLoading(true);
-        const { data } = await axios.get("/api/faculty/classes");
-        setClasses(data.classes);
-        setError(null);
-      } catch (err) {
-        setError(err.message || "An error occurred");
-        toast.error(err.message || "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchClasses();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
-
+const Classes = ({ classes, error }) => {
   if (error) {
     return (
       <div className="px-4 sm:px-0 py-6 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
@@ -147,6 +114,30 @@ const Classes = () => {
       </div>
     </div>
   );
+};
+
+export const getServerSideProps = async ({ req }) => {
+  try {
+    const { data } = await axios.get(`http://localhost:3000/api/faculty/classes`, {
+      headers: {
+        Cookie: req.headers.cookie || ''
+      }
+    });
+    
+    return {
+      props: {
+        classes: data.classes,
+        error: null
+      }
+    };
+  } catch (err) {
+    return {
+      props: {
+        classes: [],
+        error: err.message || "An error occurred"
+      }
+    };
+  }
 };
 
 export default Classes;

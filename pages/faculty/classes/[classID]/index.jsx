@@ -17,39 +17,8 @@ import AnnouncementCard from "@/pages/faculty/classes/_components/AnnouncementCa
 import AssignmentCard from "@/pages/faculty/classes/_components/AssignmentCard";
 import DiscussionCard from "@/pages/faculty/classes/_components/DiscussionCard";
 
-const ClassPage = () => {
+const ClassPage = ({ classDetails, error }) => {
   const router = useRouter();
-  const [classDetails, setClassDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const { classID } = router.query;
-
-  useEffect(() => {
-    const fetchClassDetails = async () => {
-      try {
-        setIsLoading(true);
-        const { data } = await axios.get(`/api/faculty/classes/${classID}`);
-        setClassDetails(data);
-        setError(null);
-      } catch (err) {
-        setError(err);
-        toast.error(err.message || "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchClassDetails();
-  }, [classID]);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -183,7 +152,7 @@ const ClassPage = () => {
           <h3 className="font-semibold text-2xl text-gray-900">Class Feed</h3>
           <Button
             onClick={() =>
-              router.push(`/faculty/classes/${classID}/create-post`)
+              router.push(`/faculty/classes/${router.query.classID}/create-post`)
             }
             className="bg-gradient-to-r from-blue-500 to-cyan-500"
           >
@@ -247,6 +216,30 @@ const ClassPage = () => {
       </div>
     </div>
   );
+};
+
+export const getServerSideProps = async ({ req, params }) => {
+  try {
+    const { data } = await axios.get(`http://localhost:3000/api/faculty/classes/${params.classID}`, {
+      headers: {
+        Cookie: req.headers.cookie || ''
+      }
+    });
+    
+    return {
+      props: {
+        classDetails: data,
+        error: null
+      }
+    };
+  } catch (err) {
+    return {
+      props: {
+        classDetails: null,
+        error: err.message || "An error occurred"
+      }
+    };
+  }
 };
 
 export default ClassPage;
