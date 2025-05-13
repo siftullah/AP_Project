@@ -1,9 +1,7 @@
-;
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -20,10 +18,30 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
 const uploadFile = async (file) => {
-  return {
-    filename: file.name,
-    filepath: URL.createObjectURL(file),
-  };
+  try {
+    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("fileName", fileName);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("File upload failed");
+    }
+
+    const data = await response.json();
+    return {
+      filename: file.name,
+      filepath: `/uploads/${fileName}`,
+    };
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
 };
 
 const CreateAssignment = () => {
@@ -90,7 +108,7 @@ const CreateAssignment = () => {
       };
 
       await axios.post("/api/faculty/assignments", assignmentData);
-      
+
       toast.success("Assignment created successfully");
       router.push("/faculty/assignments");
     } catch (error) {
@@ -116,12 +134,17 @@ const CreateAssignment = () => {
   return (
     <div className="px-4 md:px-10 py-8">
       <ToastContainer />
-      <Button onClick={() => router.back()} className="flex items-center mb-4 text-blue-600">
+      <Button
+        onClick={() => router.back()}
+        className="flex items-center mb-4 text-blue-600"
+      >
         <ArrowLeftIcon className="mr-2 w-4 h-4" /> Back
       </Button>
       <Card className="rounded-xl border border-blue-100 shadow-md">
         <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-xl px-6 py-4">
-          <h1 className="text-xl md:text-2xl font-bold">Create New Assignment</h1>
+          <h1 className="text-xl md:text-2xl font-bold">
+            Create New Assignment
+          </h1>
         </div>
         <CardContent className="p-6 space-y-6">
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -208,7 +231,9 @@ const CreateAssignment = () => {
                       key={index}
                       className="flex items-center gap-2 bg-slate-50 p-2 rounded-md"
                     >
-                      <span className="flex-1 truncate text-sm">{file.file.name}</span>
+                      <span className="flex-1 truncate text-sm">
+                        {file.file.name}
+                      </span>
                       {file.uploading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
@@ -227,7 +252,11 @@ const CreateAssignment = () => {
               )}
             </div>
             <div className="pt-4">
-              <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
                 {isSubmitting && (
                   <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 )}

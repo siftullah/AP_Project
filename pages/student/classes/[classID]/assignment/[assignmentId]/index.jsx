@@ -40,21 +40,51 @@ const AssignmentPage = ({ assignmentData, error }) => {
     setIsSubmitting(true);
 
     try {
-      // Simulate upload progress
-      let progress = 0;
-      const progressInterval = setInterval(() => {
-        progress += 5;
-        setUploadProgress(progress);
-        if (progress >= 100) {
-          clearInterval(progressInterval);
-        }
-      }, 100);
+      setUploadProgress(10);
 
-      // Simulate API call completion after "upload" completes
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Upload files to public folder
+      const uploadedFiles = await Promise.all(
+        uploadFiles.map(async (file, index) => {
+          const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("fileName", fileName);
 
-      // In a real implementation, we would send data to the API here
-      // await axios.post(`/api/student/assignments/${assignmentId}/submit`, formData);
+          // Use axios for upload
+          const response = await axios.post("/api/upload", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            onUploadProgress: (progressEvent) => {
+              const percentCompleted = Math.round(
+                (progressEvent.loaded * 80) / progressEvent.total
+              );
+              // Update progress for each file
+              const progressIncrement = 80 / uploadFiles.length;
+              setUploadProgress((prev) =>
+                Math.min(
+                  10 + (percentCompleted * (index + 1)) / uploadFiles.length,
+                  90
+                )
+              );
+            },
+          });
+
+          return {
+            filename: file.name,
+            filepath: `/uploads/${fileName}`,
+          };
+        })
+      );
+
+      setUploadProgress(90);
+
+      // Submit assignment with file references
+      await axios.post(`/api/student/assignments/${assignmentId}`, {
+        attachments: uploadedFiles,
+      });
+
+      setUploadProgress(100);
 
       // Refresh the page to get updated data
       router.replace(router.asPath);
@@ -74,11 +104,8 @@ const AssignmentPage = ({ assignmentData, error }) => {
     setIsDeleting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real implementation, we would send delete request to the API here
-      // await axios.delete(`/api/student/assignments/${assignmentId}/submission`);
+      // Use the combined API endpoint
+      await axios.delete(`/api/student/assignments/${assignmentId}`);
 
       // Refresh the page to get updated data
       router.replace(router.asPath);
@@ -101,16 +128,13 @@ const AssignmentPage = ({ assignmentData, error }) => {
     });
   };
 
-  const getSubmissionStatus = () => {
-    if (!assignmentData?.assignment) return "pending";
-    return assignmentData.assignment.attachments &&
-      assignmentData.assignment.attachments.length > 0
-      ? "submitted"
-      : "pending";
-  };
-
   const getDueStatus = () => {
     if (!assignmentData?.assignment?.dueDate) return "no-due-date";
+
+    // If already submitted, don't show as overdue
+    if (assignmentData.status === "submitted") {
+      return "submitted";
+    }
 
     const now = new Date();
     const due = new Date(assignmentData.assignment.dueDate);
@@ -213,7 +237,6 @@ const AssignmentPage = ({ assignmentData, error }) => {
     );
   }
 
-  const submissionStatus = getSubmissionStatus();
   const dueStatus = getDueStatus();
   const timeRemaining = getTimeRemaining();
 
@@ -296,12 +319,11 @@ const AssignmentPage = ({ assignmentData, error }) => {
                             <a
                               key={attachment.id}
                               href={attachment.filepath}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              download={attachment.filename}
                               className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 p-2 border border-blue-100 rounded-md text-black-700 transition-colors"
                             >
-                              <FileIcon className="w-4 h-4 text-black-600" />
-                              <span className="text-sm">
+                              <FileIcon className="w-4 h-4 text-blue-600" />
+                              <span className="text-sm text-blue-700 hover:underline">
                                 {attachment.filename}
                               </span>
                             </a>
@@ -338,7 +360,14 @@ const AssignmentPage = ({ assignmentData, error }) => {
 
                   {timeRemaining && (
                     <div className="ml-auto">
-                      {dueStatus === "overdue" ? (
+                      {assignmentData.status === "submitted" ? (
+                        <Badge
+                          variant="default"
+                          className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="w-3 h-3" /> Submitted
+                        </Badge>
+                      ) : assignmentData.status === "overdue" ? (
                         <Badge
                           variant="destructive"
                           className="flex items-center gap-1"
@@ -370,32 +399,37 @@ const AssignmentPage = ({ assignmentData, error }) => {
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                      {submissionStatus === "pending" ? (
-                        <Badge
-                          variant="outline"
-                          className="border-blue-200 text-black-700"
-                        >
-                          Not Submitted
-                        </Badge>
-                      ) : (
+                      {assignmentData.status === "submitted" ? (
                         <Badge
                           variant="default"
                           className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
                         >
                           <CheckCircle className="w-3 h-3" /> Submitted
                         </Badge>
+                      ) : assignmentData.status === "overdue" ? (
+                        <Badge
+                          variant="destructive"
+                          className="flex items-center gap-1"
+                        >
+                          <AlertTriangle className="w-3 h-3" /> Overdue
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-blue-200 text-black-700"
+                        >
+                          Not Submitted
+                        </Badge>
                       )}
 
-                      {dueStatus === "overdue" &&
-                        submissionStatus === "pending" && (
-                          <Badge
-                            variant="destructive"
-                            className="flex items-center gap-1"
-                          >
-                            <AlertTriangle className="w-3 h-3" /> Deadline
-                            Passed
-                          </Badge>
-                        )}
+                      {assignmentData.status === "overdue" && (
+                        <Badge
+                          variant="destructive"
+                          className="flex items-center gap-1 ml-2"
+                        >
+                          <AlertTriangle className="w-3 h-3" /> Deadline Passed
+                        </Badge>
+                      )}
                     </div>
 
                     <AnimatePresence>
@@ -431,12 +465,11 @@ const AssignmentPage = ({ assignmentData, error }) => {
                                       <a
                                         key={attachment.id}
                                         href={attachment.filepath}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                        download={attachment.filename}
                                         className="flex items-center gap-2 bg-white hover:bg-blue-50 p-2 border border-blue-100 rounded-md text-black-700 transition-colors"
                                       >
-                                        <FileIcon className="w-4 h-4 text-black-600" />
-                                        <span className="text-sm">
+                                        <FileIcon className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm text-blue-700 hover:underline">
                                           {attachment.filename}
                                         </span>
                                       </a>
@@ -491,118 +524,121 @@ const AssignmentPage = ({ assignmentData, error }) => {
                   </div>
                 </div>
 
-                {submissionStatus === "pending" && dueStatus !== "overdue" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.5 }}
-                  >
-                    <Card className="bg-white shadow-sm border-blue-100 overflow-hidden">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-black-900 text-lg">
-                          Submit Assignment
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <label
-                                htmlFor="file-upload"
-                                className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 px-4 py-2 border border-blue-200 rounded-md text-black-700 transition-colors cursor-pointer"
-                              >
-                                <FileUp className="w-4 h-4" />
-                                <span>Select Files</span>
-                              </label>
-                              <input
-                                id="file-upload"
-                                type="file"
-                                onChange={handleFileChange}
-                                className="hidden"
-                                multiple
-                              />
-                            </div>
-
-                            {uploadFiles.length > 0 && (
-                              <div className="space-y-2 mt-4">
-                                <p className="font-medium text-black-700 text-sm">
-                                  Files to submit:
-                                </p>
-                                <div className="space-y-2">
-                                  {uploadFiles.map((file, index) => (
-                                    <motion.div
-                                      key={index}
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      className="flex justify-between items-center bg-blue-50 p-2 border border-blue-100 rounded-md"
-                                    >
-                                      <div className="flex items-center gap-2 text-black-800">
-                                        <FileUp className="w-4 h-4 text-black-600" />
-                                        <span className="max-w-[200px] text-sm truncate">
-                                          {file.name}
-                                        </span>
-                                        <span className="text-black-500 text-xs">
-                                          ({(file.size / 1024).toFixed(1)} KB)
-                                        </span>
-                                      </div>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeFile(index)}
-                                        className="hover:bg-blue-100 w-6 h-6 text-black-700 hover:text-black-900"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </Button>
-                                    </motion.div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {isSubmitting && (
+                {assignmentData.status === "pending" &&
+                  dueStatus !== "overdue" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                    >
+                      <Card className="bg-white shadow-sm border-blue-100 overflow-hidden">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-black-900 text-lg">
+                            Submit Assignment
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                              <div className="flex justify-between text-black-700 text-sm">
-                                <span>Uploading...</span>
-                                <span>{uploadProgress}%</span>
+                              <div className="flex items-center gap-2">
+                                <label
+                                  htmlFor="file-upload"
+                                  className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 px-4 py-2 border border-blue-200 rounded-md text-black-700 transition-colors cursor-pointer"
+                                >
+                                  <FileUp className="w-4 h-4" />
+                                  <span>Select Files</span>
+                                </label>
+                                <input
+                                  id="file-upload"
+                                  type="file"
+                                  onChange={handleFileChange}
+                                  className="hidden"
+                                  multiple
+                                />
                               </div>
-                              <Progress
-                                value={uploadProgress}
-                                className="bg-blue-100 h-2"
-                              />
+
+                              {uploadFiles.length > 0 && (
+                                <div className="space-y-2 mt-4">
+                                  <p className="font-medium text-black-700 text-sm">
+                                    Files to submit:
+                                  </p>
+                                  <div className="space-y-2">
+                                    {uploadFiles.map((file, index) => (
+                                      <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex justify-between items-center bg-blue-50 p-2 border border-blue-100 rounded-md"
+                                      >
+                                        <div className="flex items-center gap-2 text-black-800">
+                                          <FileUp className="w-4 h-4 text-black-600" />
+                                          <span className="max-w-[200px] text-sm truncate">
+                                            {file.name}
+                                          </span>
+                                          <span className="text-black-500 text-xs">
+                                            ({(file.size / 1024).toFixed(1)} KB)
+                                          </span>
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => removeFile(index)}
+                                          className="hover:bg-blue-100 w-6 h-6 text-black-700 hover:text-black-900"
+                                        >
+                                          <X className="w-4 h-4" />
+                                        </Button>
+                                      </motion.div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </form>
-                      </CardContent>
-                      <CardFooter className="flex justify-end gap-3 pt-4 border-t border-blue-50">
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Button
-                            type="submit"
-                            onClick={handleSubmit}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                            disabled={isSubmitting || uploadFiles.length === 0}
-                          >
-                            {isSubmitting ? (
-                              <div className="flex items-center gap-2">
-                                <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
-                                <span>Submitting...</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                <Upload className="w-4 h-4" />
-                                <span>Submit Assignment</span>
+
+                            {isSubmitting && (
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-black-700 text-sm">
+                                  <span>Uploading...</span>
+                                  <span>{uploadProgress}%</span>
+                                </div>
+                                <Progress
+                                  value={uploadProgress}
+                                  className="bg-blue-100 h-2"
+                                />
                               </div>
                             )}
-                          </Button>
-                        </motion.div>
-                      </CardFooter>
-                    </Card>
-                  </motion.div>
-                )}
+                          </form>
+                        </CardContent>
+                        <CardFooter className="flex justify-end gap-3 pt-4 border-t border-blue-50">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Button
+                              type="submit"
+                              onClick={handleSubmit}
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              disabled={
+                                isSubmitting || uploadFiles.length === 0
+                              }
+                            >
+                              {isSubmitting ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
+                                  <span>Submitting...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Upload className="w-4 h-4" />
+                                  <span>Submit Assignment</span>
+                                </div>
+                              )}
+                            </Button>
+                          </motion.div>
+                        </CardFooter>
+                      </Card>
+                    </motion.div>
+                  )}
               </div>
             </CardContent>
           </Card>

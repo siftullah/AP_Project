@@ -175,8 +175,7 @@ const SubmissionsPage = () => {
                         <a
                           key={attachment.id}
                           href={attachment.filepath}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          download={attachment.filename}
                           className="flex items-center gap-2 text-blue-600 hover:underline"
                         >
                           <FileIcon className="w-4 h-4" />

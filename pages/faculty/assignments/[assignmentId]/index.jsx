@@ -88,8 +88,7 @@ const FacultyAssignmentPage = ({ assignment, error }) => {
               <a
                 key={file.id}
                 href={file.filepath}
-                target="_blank"
-                rel="noopener noreferrer"
+                download={file.filename}
                 className="flex items-center gap-2 p-3 rounded-md bg-slate-50 hover:bg-slate-100 transition"
               >
                 <FileIcon className="w-4 h-4 text-blue-500" />
