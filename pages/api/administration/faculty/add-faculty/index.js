@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and verify university_id
+    
     const { userId } = getAuth(req);
 
     if (!userId) {

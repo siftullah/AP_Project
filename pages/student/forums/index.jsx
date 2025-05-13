@@ -100,7 +100,7 @@ export async function getServerSideProps(context) {
       `http://localhost:3000/api/student/forums`,
       {
         headers: {
-          // Forward the authentication cookie from the request
+          
           Cookie: cookies,
         },
       }

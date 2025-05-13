@@ -52,7 +52,6 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
@@ -66,13 +65,13 @@ export async function getServerSideProps({ req }) {
     const [groupsRes, usersRes] = await Promise.all([
       fetch(`http://localhost:3000/api/administration/groups/get-groups`, {
         headers: {
-          // Forward the authentication cookie from the request
+          
           Cookie: req.headers.cookie || "",
         }
       }),
       fetch(`http://localhost:3000/api/administration/groups/get-users`, {
         headers: {
-          // Forward the authentication cookie from the request
+          
           Cookie: req.headers.cookie || "",
         }
       })
@@ -116,7 +115,6 @@ export default function GroupsPage({ initialGroups, initialUsers, error }) {
   const [isEditMembersDialogOpen, setIsEditMembersDialogOpen] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState(null)
   const [isDeleting, setIsDeleting] = useState(null)
-  const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
 
   const columns = [
@@ -200,12 +198,9 @@ export default function GroupsPage({ initialGroups, initialUsers, error }) {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
-      sorting,
       columnFilters,
     },
   })

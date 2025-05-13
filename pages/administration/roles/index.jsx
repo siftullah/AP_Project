@@ -25,7 +25,6 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 import { format } from "date-fns"
@@ -33,7 +32,6 @@ import { format } from "date-fns"
 export default function RolesPage({ initialRoles, initialPermissions }) {
   const [roles, setRoles] = useState(initialRoles)
   const [permissions, setPermissions] = useState(initialPermissions)
-  const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
   const [newRole, setNewRole] = useState({ role: '', permissions: [] })
   const [editingRole, setEditingRole] = useState(null)
@@ -127,12 +125,9 @@ export default function RolesPage({ initialRoles, initialPermissions }) {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
-      sorting,
       columnFilters,
     },
   })

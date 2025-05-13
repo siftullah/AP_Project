@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { cn } from "@/lib/utils"
-import { Home, BookOpen, Users, UserCog, MessageSquare, School, Layers, FileSpreadsheet, LogOut } from 'lucide-react'
+import { Home, BookOpen, Users, UserCog, MessageSquare, School, Layers, LogOut } from 'lucide-react'
 import { useClerk } from '@clerk/nextjs'
 import { Button } from "@/components/ui/button"
 
@@ -36,12 +36,6 @@ const sidebarSections = [
     items: [
       { icon: Users, label: "Groups", href: "/administration/groups" },
       { icon: MessageSquare, label: "Forums", href: "/administration/forums" },
-    ]
-  },
-  {
-    title: "Actions",
-    items: [
-      { icon: FileSpreadsheet, label: "Bulk Actions", href: "/administration/bulk-actions" },
     ]
   }
 ]

@@ -47,7 +47,6 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table"
 
@@ -69,7 +68,7 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedClassroom, setSelectedClassroom] = useState(null)
   const [isDeleting, setIsDeleting] = useState(null)
-  const [sorting, setSorting] = useState([])
+
   const [columnFilters, setColumnFilters] = useState([])
 
   const columns = [
@@ -148,12 +147,9 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
-      sorting,
       columnFilters,
     },
   })
@@ -201,7 +197,7 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
       
       const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
         headers: {
-          // Forward the authentication cookie from the request
+          
         
         },
       })
@@ -245,7 +241,7 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
       
       const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
         headers: {
-          // Forward the authentication cookie from the request
+          
          
         },
       })
@@ -283,7 +279,7 @@ export default function ClassroomsPage({ initialClassrooms, initialDepartments, 
       
       const classroomsRes = await fetch('/api/administration/classrooms/get-classrooms', {
         headers: {
-          // Forward the authentication cookie from the request
+          
       
         },
       })

@@ -5,7 +5,7 @@ import FacultyLayout from "@/components/layouts/FacultyLayout";
 import StudentLayout from "@/components/layouts/StudentLayout";
 
 export default function App({ Component, pageProps, router }) {
-  // Select the appropriate layout based on the pathname
+
   const getLayout = () => {
     const path = router.pathname;
 
@@ -21,22 +21,17 @@ export default function App({ Component, pageProps, router }) {
       return StudentLayout;
     }
 
-    // Return null for default layout (no wrapper)
     return null;
   };
 
-  // Get the appropriate layout component
+  //getting the appropriate layout component
   const Layout = getLayout();
 
   return (
     <ClerkProvider>
-      {Layout ? (
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      ) : (
-        <Component {...pageProps} />
-      )}
+      {Layout ? (<Layout><Component {...pageProps} /></Layout>) 
+              : (<Component {...pageProps} />)
+      }
     </ClerkProvider>
   );
 }

@@ -57,7 +57,6 @@ export default function AdminManagementPage({ initialAdmins, initialRoles }) {
     roleId: '',
     roleName: ''
   })
-  const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -122,12 +121,9 @@ export default function AdminManagementPage({ initialAdmins, initialRoles }) {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
-      sorting,
       columnFilters,
     },
   })
