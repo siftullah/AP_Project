@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and verify authentication
+    
     const { userId } = getAuth(req)
 
     if (!userId) {
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
-    // Get all permissions from the Permission table
+    
     const permissions = await prisma.permission.findMany({
       select: {
         id: true,

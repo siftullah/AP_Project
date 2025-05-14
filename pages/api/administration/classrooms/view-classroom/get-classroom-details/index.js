@@ -26,14 +26,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get classroom ID from URL
+    
     const { classroom_id } = req.query
 
     if (!classroom_id) {
       return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
-    // Get classroom with related data
+    
     const classroom = await prisma.classroom.findFirst({
       where: {
         id: classroom_id,
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Classroom not found' })
     }
 
-    // Format the response
+    
     const formattedClassroom = {
       classroom_id: classroom.id,
       classroom_name: classroom.name,

@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get departments with related counts
+    
     const departments = await prisma.department.findMany({
       where: {
         university_id: universityId
@@ -46,14 +46,14 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format the response with counts
+    
     const formattedDepartments = departments.map(dept => {
-      // Count total students across all batches
+      
       const studentCount = dept.batches.reduce((total, batch) => {
         return total + batch.students.length
       }, 0)
 
-      // Count total classrooms across all courses
+      
       const classroomCount = dept.courses.reduce((total, course) => {
         return total + course.classrooms.length
       }, 0)

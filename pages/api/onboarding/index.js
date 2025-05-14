@@ -19,14 +19,14 @@ export default async function handler(req, res) {
     const user = await client.users.getUser(userId)
     const { universityName } = req.body
 
-    // Create university record
+    
     const university = await prisma.university.create({
       data: {
         name: universityName,
       },
     })
 
-    // Get all default roles
+    
     const defaultRoles = await prisma.defaultUniAdministrationRoles.findMany({
       include: {
         permissions: {
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       },
     })
 
-    // Create university-specific roles with their permissions
+    
     for (const defaultRole of defaultRoles) {
       await prisma.uniAdministrationRoles.create({
         data: {
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       })
     }
 
-    // Get the Super Admin role ID for this university
+    
     const superAdminRole = await prisma.uniAdministrationRoles.findFirst({
       where: {
         university_id: university.id,
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
       },
     })
 
-    // Create user record
+    
     await prisma.user.create({
       data: {
         id: userId,
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       },
     })
 
-    // Create UniAdministration record
+    
     const uniSuperAdmin = await prisma.uniAdministration.create({
       data: {
         user_id: userId,
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
       },
     })
 
-    // Update Clerk user metadata
+    
     await client.users.updateUserMetadata(userId, {
       publicMetadata: {
         role: "admin",

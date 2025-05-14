@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get students with related data
+    
     const students = await prisma.student.findMany({
       where: {
         department_batch: {
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format response
+    
     const formattedStudents = students.map(student => ({
       id: student.id,
       roll_number: student.roll_number,

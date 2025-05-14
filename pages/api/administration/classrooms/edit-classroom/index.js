@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get classroom details from request body
+    
     const { classroom_id, name: classroom_name, batch_id, course_id } = req.body
     console.log('Request body:', JSON.stringify(req.body, null, 2))
     console.log('Parsed values:', JSON.stringify({
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
-    // Verify classroom exists and belongs to user's university
+    
     const existingClassroom = await prisma.classroom.findFirst({
       where: {
         id: classroom_id,
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Classroom not found' })
     }
 
-    // Verify course exists and belongs to user's university
+    
     const course = await prisma.course.findFirst({
       where: {
         id: course_id,
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Course not found' })
     }
 
-    // Verify batch exists and belongs to user's university
+    
     const batch = await prisma.batch.findFirst({
       where: {
         id: batch_id,
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Batch not found' })
     }
 
-    // Update classroom
+    
     const classroom = await prisma.classroom.update({
       where: {
         id: classroom_id

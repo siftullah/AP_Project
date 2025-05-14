@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get all administrators for this university with their user details and roles
+    
     const administrators = await prisma.uniAdministration.findMany({
       where: {
         role: {
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format the response
+    
     const formattedAdministrators = administrators.map(admin => ({
       administration_id: admin.id,
       first_name: admin.user.first_name,

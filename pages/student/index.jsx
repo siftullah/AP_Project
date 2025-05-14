@@ -93,7 +93,7 @@ export async function getServerSideProps(context) {
   const { req } = context;
 
   try {
-    // Fetch classrooms using axios from the server
+  
     const response = await axios.get(
       "http://localhost:3000/api/student/classes",
       {

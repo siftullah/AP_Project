@@ -30,9 +30,9 @@ export default async function handler(req, res) {
     const type = formData.get("type");
     const attachment = formData.get("attachment");
 
-    // Create the thread and its main post in a transaction
+    
     const result = await prisma.$transaction(async (tx) => {
-      // Create the thread first
+      
       const thread = await tx.classroomThread.create({
         data: {
           title,
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
                 attachments: {
                   create: {
                     filename: attachment.name,
-                    filepath: "placeholder-path", // Replace with actual file upload logic
+                    filepath: "placeholder-path", 
                   },
                 },
               }),
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         },
       });
 
-      // Update the thread with the main post
+      
       await tx.classroomThread.update({
         where: { id: thread.id },
         data: { main_post_id: thread.posts[0].id },

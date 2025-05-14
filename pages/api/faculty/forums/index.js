@@ -6,13 +6,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   try {
-    // Get current user
+    
     const { userId } = await getAuth(req);
     if (!userId) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Get faculty details including department info
+    
     const faculty = await prisma.faculty.findFirst({
       where: { user_id: userId },
       include: {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Faculty not found" });
     }
 
-    // Get all custom groups the student is part of
+    
     const customGroupMemberships = await prisma.customGroupMembers.findMany({
       where: { user_id: userId },
       select: { custom_group: { select: { group_id: true } } },
@@ -34,22 +34,22 @@ export default async function handler(req, res) {
       (membership) => membership.custom_group.group_id
     );
 
-    // Get department groups
+    
     const departmentGroup = await prisma.departmentGroup.findFirst({
       where: { department_id: faculty.department.id },
       select: { group_id: true },
     });
 
-    // Get all batch groups as faculty can view all batches
+    
     const batchGroups = await prisma.batchGroup.findMany({
       select: { group_id: true },
     });
 
-    // Get forums that are either public (group_id is null) or belong to student's groups
+    
     const forums = await prisma.forum.findMany({
       where: {
         OR: [
-          { group_id: null }, // Public forums
+          { group_id: null }, 
           {
             group_id: {
               in: [
@@ -58,11 +58,11 @@ export default async function handler(req, res) {
                 ...customGroupIds,
               ],
             },
-          }, // Forums in student's groups
+          }, 
         ],
       },
       include: {
-        group: true, // Include group details if it exists
+        group: true, 
         threads: {
           select: {
             id: true,

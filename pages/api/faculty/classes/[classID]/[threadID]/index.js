@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Check if the user is a faculty member
+    
     const faculty = await prisma.faculty.findUnique({
       where: { user_id: userId },
     });

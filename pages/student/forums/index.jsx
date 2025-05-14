@@ -13,7 +13,7 @@ const Forums = ({ forumsData, error }) => {
     return <Loader />;
   }
 
-  // Error handling UI
+  
   if (error) {
     return (
       <div className="bg-gradient-to-b from-blue-50 via-blue-50/30 to-white px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
@@ -78,12 +78,12 @@ const Forums = ({ forumsData, error }) => {
   );
 };
 
-// Server-side rendering to fetch forums
+
 export async function getServerSideProps(context) {
   const { req } = context;
 
   try {
-    // Get the cookie from the request headers
+    
     const cookies = req.headers.cookie;
 
     if (!cookies) {
@@ -95,7 +95,7 @@ export async function getServerSideProps(context) {
       };
     }
 
-    // Fetch forums using axios from the server
+    
     const response = await axios.get(
       `http://localhost:3000/api/student/forums`,
       {
@@ -115,7 +115,7 @@ export async function getServerSideProps(context) {
   } catch (error) {
     console.error("Error fetching forums:", error);
 
-    // Handle unauthorized errors by redirecting to sign-in
+    
     if (error.response?.status === 401) {
       return {
         redirect: {

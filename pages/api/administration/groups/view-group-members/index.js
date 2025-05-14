@@ -24,14 +24,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { group_id } = req.body
 
     if (!group_id) {
       return res.status(400).json({ error: 'Group ID is required' })
     }
 
-    // First verify if group exists and is custom type
+    
     const group = await prisma.group.findUnique({
       where: { id: group_id }
     })
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Only custom groups are supported' })
     }
 
-    // Get members from CustomGroupMembers with user details
+    
     const members = await prisma.customGroupMembers.findMany({
       where: {
         custom_group: {
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format members data
+    
     const formattedMembers = members.map(member => ({
       user_id: member.user.id,
       name: `${member.user.first_name} ${member.user.last_name}`,

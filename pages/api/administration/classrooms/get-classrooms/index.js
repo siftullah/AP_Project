@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get classrooms with related data
+    
     const classrooms = await prisma.classroom.findMany({
       where: {
         course: {
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format the response
+    
     const formattedClassrooms = classrooms.map(classroom => {
       const teacherNames = classroom.teachers.map(teacher => 
         `${teacher.user.first_name} ${teacher.user.last_name}`

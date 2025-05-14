@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req)
 
     if (!userId) {
@@ -25,16 +25,16 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get forum_id from request body
+    
     const { forum_id } = req.body
 
     if (!forum_id) {
       return res.status(400).json({ error: 'Forum ID is required' })
     }
 
-    // Delete all thread post attachments, posts, threads and forum in transaction
+    
     const deletedForum = await prisma.$transaction(async (tx) => {
-      // Get all threads in forum
+      
       const threads = await tx.thread.findMany({
         where: {
           forum_id: forum_id
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 
       const threadIds = threads.map(t => t.id)
 
-      // Delete all thread post attachments
+      
       await tx.threadPostAttachments.deleteMany({
         where: {
           post: {
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
         }
       })
 
-      // Delete all thread posts
+      
       await tx.threadPost.deleteMany({
         where: {
           thread_id: {
@@ -66,14 +66,14 @@ export default async function handler(req, res) {
         }
       })
 
-      // Delete all threads
+      
       await tx.thread.deleteMany({
         where: {
           forum_id: forum_id
         }
       })
 
-      // Delete forum
+      
       return await tx.forum.delete({
         where: {
           id: forum_id,

@@ -23,10 +23,10 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
 
-    // Get role details from request body
+    
     const { role: roleName, permissions } = req.body
 
-    // Create new role
+    
     const newRole = await prisma.uniAdministrationRoles.create({
       data: {
         role: roleName,
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Get all requested permissions
+    
     const requestedPermissions = await prisma.permission.findMany({
       where: {
         id: {
@@ -43,11 +43,11 @@ export default async function handler(req, res) {
       }
     })
 
-    // Check if 'all' permission exists
+    
     const hasAllPermission = requestedPermissions.some(p => p.permission.toLowerCase() === 'all')
 
     if (hasAllPermission) {
-      // If 'all' permission exists, only add that one
+      
       const allPermission = requestedPermissions.find(p => p.permission.toLowerCase() === 'all')
       await prisma.uniAdministrationRolesPermissions.create({
         data: {
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         }
       })
     } else {
-      // Otherwise add all requested permissions
+      
       await prisma.uniAdministrationRolesPermissions.createMany({
         data: permissions.map(permissionId => ({
           role_id: newRole.id,

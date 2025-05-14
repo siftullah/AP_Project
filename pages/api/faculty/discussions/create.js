@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       .map((member) => member.toString());
     const attachment = formData.get("attachment");
 
-    // Get faculty's information
+    
     const faculty = await prisma.faculty.findUnique({
       where: { user_id: userId },
       include: {
@@ -36,11 +36,11 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Faculty not found" });
     }
 
-    // Create thread based on type
+    
     const result = await prisma.$transaction(async (tx) => {
       let groupId = null;
 
-      // Handle group creation for different types
+      
       if (type === "private" && groupName && members.length > 0) {
         const group = await tx.group.create({
           data: {
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
         groupId = departmentGroup?.group_id || null;
       }
 
-      // Create thread and its main post
+      
       const thread = await tx.thread.create({
         data: {
           title,
@@ -89,12 +89,12 @@ export default async function handler(req, res) {
               type: "main",
               description,
               user_id: user.id,
-              // Handle attachment if needed
+              
               ...(attachment && {
                 attachments: {
                   create: {
                     filename: attachment.name,
-                    filepath: "path/to/store", // Implement file storage logic
+                    filepath: "path/to/store", 
                   },
                 },
               }),
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
         },
       });
 
-      // Update thread with main_post_id
+      
       await tx.thread.update({
         where: { id: thread.id },
         data: { main_post_id: thread.posts[0].id },

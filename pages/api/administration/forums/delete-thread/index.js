@@ -25,14 +25,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get thread_id from query params
+    
     const { thread_id } = req.query
 
     if (!thread_id) {
       return res.status(400).json({ error: 'Thread ID is required' })
     }
 
-    // Delete all post attachments for all posts in the thread
+    
     await prisma.threadPostAttachments.deleteMany({
       where: {
         post: {
@@ -41,14 +41,14 @@ export default async function handler(req, res) {
       }
     })
 
-    // Delete all posts in the thread
+    
     await prisma.threadPost.deleteMany({
       where: {
         thread_id: thread_id
       }
     })
 
-    // Delete the thread
+    
     const deletedThread = await prisma.thread.delete({
       where: {
         id: thread_id,

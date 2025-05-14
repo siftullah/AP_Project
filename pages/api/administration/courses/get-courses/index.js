@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req);
 
     if (!userId) {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get courses with related department, classrooms and enrollments
+    
     const courses = await prisma.course.findMany({
       where: {
         department: {
@@ -43,9 +43,9 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format the response
+    
     const formattedCourses = courses.map(course => {
-      // Count total students across all classrooms
+      
       const studentCount = course.classrooms.reduce((total, classroom) => {
         return total + classroom.enrollments.length
       }, 0)

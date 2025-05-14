@@ -260,13 +260,13 @@ const ClassPage = ({ classData, error }) => {
   );
 };
 
-// Use getServerSideProps to fetch data on the server side
+
 export async function getServerSideProps(context) {
   const { classID } = context.params;
   const { req } = context;
 
   try {
-    // Fetch class details using axios from the server
+    
     const response = await axios.get(
       `http://localhost:3000/api/student/classes/${classID}`,
       {

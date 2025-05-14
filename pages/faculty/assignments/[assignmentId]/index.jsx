@@ -50,7 +50,7 @@ const FacultyAssignmentPage = ({ assignment, error }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Description */}
+        
         <Card className="bg-white rounded-2xl shadow md:col-span-2">
           <CardHeader>
             <CardTitle>Description</CardTitle>
@@ -60,7 +60,7 @@ const FacultyAssignmentPage = ({ assignment, error }) => {
           </CardContent>
         </Card>
 
-        {/* Details */}
+        
         <Card className="bg-white rounded-2xl shadow">
           <CardHeader>
             <CardTitle>Details</CardTitle>
@@ -77,7 +77,7 @@ const FacultyAssignmentPage = ({ assignment, error }) => {
         </Card>
       </div>
 
-      {/* Attachments */}
+      
       <Card className="bg-white rounded-2xl shadow">
         <CardHeader>
           <CardTitle>Attachments</CardTitle>

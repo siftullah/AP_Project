@@ -29,7 +29,7 @@ const DiscussionPage = ({ initialDiscussion }) => {
       setReply("");
       toast.success("Reply posted successfully!");
 
-      // Refresh discussion data
+      
       const { data } = await axios.get(
         `/api/faculty/discussions/${discussion.id}`
       );

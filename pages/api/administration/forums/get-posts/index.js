@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req);
 
     if (!userId) {
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     }
     const universityId = user?.publicMetadata['university_id']
 
-    // Get thread_id from URL
+    
     const { thread_id } = req.query
     
     if (!thread_id) {

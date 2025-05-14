@@ -9,7 +9,7 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: "Unauthenticated User" });
       }
 
-      // Find all assignments of the faculty with improved query
+      
       const faculty = await prisma.faculty.findUnique({
         where: { user_id: userId },
         include: {
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
                 include: {
                   classroom: {
                     include: {
-                      course: true, // Include course details
+                      course: true, 
                       threads: {
                         where: {
                           type: "assignment",
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
                               submissions: true,
                             },
                           },
-                          main_post: true, // Include main post for description
+                          main_post: true, 
                         },
                       },
                     },
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Faculty not found" });
       }
 
-      // Format the response with more details
+      
       const classes = faculty.user.classroom_teachers.map((ct) => ({
         id: ct.classroom.id,
         name: ct.classroom.name,
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
         },
       }));
 
-      // Enhanced assignment details
+      
       const assignments = faculty.user.classroom_teachers.flatMap((ct) =>
         ct.classroom.threads
           .filter(
@@ -120,15 +120,15 @@ export default async function handler(req, res) {
         attachments,
       } = body;
 
-      // Validate required fields
+      
       if (!title || !description || !dueDate || !totalMarks || !classroomId) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Create assignment and related records in a transaction
+      
       const result = await prisma.$transaction(
         async (tx) => {
-          // Create thread first
+          
           const thread = await tx.classroomThread.create({
             data: {
               title,
@@ -137,7 +137,7 @@ export default async function handler(req, res) {
             },
           });
 
-          // Create main post for the thread
+          
           const mainPost = await tx.classroomPost.create({
             data: {
               thread_id: thread.id,
@@ -150,13 +150,13 @@ export default async function handler(req, res) {
             },
           });
 
-          // Update thread with main post
+          
           await tx.classroomThread.update({
             where: { id: thread.id },
             data: { main_post_id: mainPost.id },
           });
 
-          // Create assignment
+          
           const assignment = await tx.assignment.create({
             data: {
               thread_id: thread.id,
@@ -185,12 +185,12 @@ export default async function handler(req, res) {
           return assignment;
         },
         {
-          timeout: 20000, // Increased timeout to long time
-          maxWait: 20000, // Maximum time to wait for transaction to start
+          timeout: 20000, 
+          maxWait: 20000, 
         }
       );
 
-      // Format the response
+      
       const formattedResponse = {
         id: result.id,
         thread_id: result.thread_id,

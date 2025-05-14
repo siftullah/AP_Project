@@ -35,14 +35,14 @@ const AssignmentPage = ({ assignmentData, error }) => {
   const router = useRouter();
   const { classID, assignmentId } = router.query;
 
-  // Function to submit assignment
+  
   const submitAssignment = async () => {
     setIsSubmitting(true);
 
     try {
       setUploadProgress(10);
 
-      // Upload files to public folder
+      
       const uploadedFiles = await Promise.all(
         uploadFiles.map(async (file, index) => {
           const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
@@ -50,7 +50,7 @@ const AssignmentPage = ({ assignmentData, error }) => {
           formData.append("file", file);
           formData.append("fileName", fileName);
 
-          // Use axios for upload
+          
           const response = await axios.post("/api/upload", formData, {
             headers: {
               "Content-Type": "multipart/form-data",
@@ -59,7 +59,7 @@ const AssignmentPage = ({ assignmentData, error }) => {
               const percentCompleted = Math.round(
                 (progressEvent.loaded * 80) / progressEvent.total
               );
-              // Update progress for each file
+              
               const progressIncrement = 80 / uploadFiles.length;
               setUploadProgress((prev) =>
                 Math.min(
@@ -79,14 +79,14 @@ const AssignmentPage = ({ assignmentData, error }) => {
 
       setUploadProgress(90);
 
-      // Submit assignment with file references
+      
       await axios.post(`/api/student/assignments/${assignmentId}`, {
         attachments: uploadedFiles,
       });
 
       setUploadProgress(100);
 
-      // Refresh the page to get updated data
+      
       router.replace(router.asPath);
 
       setUploadFiles([]);
@@ -99,15 +99,15 @@ const AssignmentPage = ({ assignmentData, error }) => {
     }
   };
 
-  // Function to delete submission
+  
   const deleteSubmission = async () => {
     setIsDeleting(true);
 
     try {
-      // Use the combined API endpoint
+      
       await axios.delete(`/api/student/assignments/${assignmentId}`);
 
-      // Refresh the page to get updated data
+      
       router.replace(router.asPath);
     } catch (error) {
       console.error("Failed to delete submission:", error);
@@ -131,7 +131,7 @@ const AssignmentPage = ({ assignmentData, error }) => {
   const getDueStatus = () => {
     if (!assignmentData?.assignment?.dueDate) return "no-due-date";
 
-    // If already submitted, don't show as overdue
+    
     if (assignmentData.status === "submitted") {
       return "submitted";
     }
@@ -143,7 +143,7 @@ const AssignmentPage = ({ assignmentData, error }) => {
       return "overdue";
     }
 
-    // Due in less than 24 hours
+    
     const hoursLeft = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
     if (hoursLeft < 24) {
       return "due-soon";
@@ -648,13 +648,13 @@ const AssignmentPage = ({ assignmentData, error }) => {
   );
 };
 
-// Use getServerSideProps to fetch data on the server side
+
 export async function getServerSideProps(context) {
   const { classID, assignmentId } = context.params;
   const { req } = context;
 
   try {
-    // Fetch assignment details using axios from the server
+    
     const response = await axios.get(
       `http://localhost:3000/api/student/assignments/${assignmentId}`,
       {

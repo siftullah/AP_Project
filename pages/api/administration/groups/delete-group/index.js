@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { group_id } = req.body
 
-    // Check if group exists and is custom type
+    
     const existingGroup = await prisma.group.findUnique({
       where: { id: group_id },
       include: {
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Only custom groups can be deleted' })
     }
 
-    // Delete thread post attachments
+    
     await prisma.threadPostAttachments.deleteMany({
       where: {
         post: {
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Delete thread posts
+    
     await prisma.threadPost.deleteMany({
       where: {
         thread: {
@@ -63,31 +63,31 @@ export default async function handler(req, res) {
       }
     })
 
-    // Delete threads
+    
     await prisma.thread.deleteMany({
       where: {
         group_id: group_id
       }
     })
 
-    // Delete forums
+    
     await prisma.forum.deleteMany({
       where: {
         group_id: group_id
       }
     })
 
-    // Delete custom group members first
+    
     await prisma.customGroupMembers.deleteMany({
       where: { custom_group_id: existingGroup.custom.id }
     })
 
-    // Delete custom group
+    
     await prisma.customGroup.delete({
       where: { group_id: group_id }
     })
 
-    // Delete base group
+    
     await prisma.group.delete({
       where: { id: group_id }
     })

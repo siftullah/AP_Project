@@ -25,14 +25,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get post_id from query params
+    
     const { post_id } = req.query
 
     if (!post_id) {
       return res.status(400).json({ error: 'Post ID is required' })
     }
 
-    // Check if post is a main post
+    
     const thread = await prisma.thread.findFirst({
       where: {
         main_post_id: post_id
@@ -42,28 +42,28 @@ export default async function handler(req, res) {
           orderBy: {
             createdAt: 'asc'
           },
-          take: 2 // Get main post and next post if exists
+          take: 2 
         }
       }
     })
 
-    // Delete post attachments first
+    
     await prisma.threadPostAttachments.deleteMany({
       where: {
         thread_post_id: post_id
       }
     })
 
-    // If this is a main post and there are other posts, update thread with new main post
+    
     if (thread && thread.posts.length > 1) {
-      const nextPost = thread.posts[1] // Get next post after main post
+      const nextPost = thread.posts[1] 
       await prisma.thread.update({
         where: { id: thread.id },
         data: { main_post_id: nextPost.id }
       })
     }
 
-    // Delete the post
+    
     const deletedPost = await prisma.threadPost.delete({
       where: {
         id: post_id

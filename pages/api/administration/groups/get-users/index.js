@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get all users for this university with their details
+    
     const users = await prisma.user.findMany({
       where: {
         university_id: universityId
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format user data
+    
     const formattedUsers = users.map(user => ({
       user_id: user.id,
       name: `${user.first_name} ${user.last_name}`,

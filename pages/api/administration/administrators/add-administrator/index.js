@@ -24,10 +24,8 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get details from request body
     const { firstName, lastName, emailAddress, roleId } = req.body
 
-    // Get role details
     const role = await prisma.uniAdministrationRoles.findUnique({
       where: { id: roleId },
       select: { role: true }
@@ -37,15 +35,12 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Role not found' })
     }
 
-    // Check if role is Super Admin
     if (role.role.toLowerCase() === 'super admin') {
       return res.status(403).json({ error: 'Cannot create Super Admin' })
     }
 
-    // Generate random 8 digit password
     const password = randomBytes(4).toString('hex')
 
-    // Create Clerk user
     const clerkUser = await client.users.createUser({
       firstName,
       lastName,
@@ -53,7 +48,6 @@ export default async function handler(req, res) {
       password,
     })
 
-    // Create user in database
     const dbUser = await prisma.user.create({
       data: {
         id: clerkUser.id,
@@ -65,7 +59,6 @@ export default async function handler(req, res) {
       }
     })
 
-    // Create UniAdministration record
     const uniAdmin = await prisma.uniAdministration.create({
       data: {
         user_id: clerkUser.id,
@@ -73,7 +66,6 @@ export default async function handler(req, res) {
       }
     })
 
-    // Update Clerk user metadata with administration_id
     await client.users.updateUserMetadata(clerkUser.id, {
       publicMetadata: {
         role: 'admin',

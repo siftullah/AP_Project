@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get faculty with related data
+    
     const faculty = await prisma.faculty.findMany({
       where: {
         department: {
@@ -33,14 +33,14 @@ export default async function handler(req, res) {
       include: {
         user: true,
         department: true,
-        // Faculty doesn't have direct access to classroom_teachers
-        // Need to go through user relation
+        
+        
       }
     })
 
-    // Format response
+    
     const formattedFaculty = await Promise.all(faculty.map(async f => {
-      // Get classroom count through user relation
+      
       const classroomTeachers = await prisma.classroomTeachers.findMany({
         where: {
           user_id: f.user_id

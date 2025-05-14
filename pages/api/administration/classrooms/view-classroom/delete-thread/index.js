@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req);
 
     if (!userId) {
@@ -26,14 +26,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get thread_id from URL params
+    
     const { thread_id: threadId } = req.query
 
     if (!threadId) {
       return res.status(400).json({ error: 'Thread ID is required' })
     }
 
-    // Delete submission attachments first
+    
     await prisma.submissionAttachments.deleteMany({
       where: {
         submission: {
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Delete submissions
+    
     await prisma.submission.deleteMany({
       where: {
         assignment: {
@@ -53,14 +53,14 @@ export default async function handler(req, res) {
       }
     })
 
-    // Delete assignments
+    
     await prisma.assignment.deleteMany({
       where: {
         thread_id: threadId
       }
     })
 
-    // Delete all post attachments for all posts in the thread
+    
     await prisma.classroomPostAttachments.deleteMany({
       where: {
         post: {
@@ -69,14 +69,14 @@ export default async function handler(req, res) {
       }
     })
 
-    // Delete all posts in the thread
+    
     await prisma.classroomPost.deleteMany({
       where: {
         thread_id: threadId
       }
     })
 
-    // Delete the thread
+    
     const deletedThread = await prisma.classroomThread.delete({
       where: {
         id: threadId

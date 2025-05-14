@@ -22,10 +22,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get course details from request body
+    
     const { course_id, course_name, course_code, department_id } = req.body
 
-    // Verify department exists and belongs to user's university
+    
     const department = await prisma.department.findFirst({
       where: {
         id: department_id,
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Department not found' })
     }
 
-    // Find and update course
+    
     const course = await prisma.course.update({
       where: {
         id: course_id

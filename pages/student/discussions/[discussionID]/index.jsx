@@ -104,7 +104,7 @@ const DiscussionPage = ({ discussionData, error }) => {
       });
 
       setReply("");
-      // Refresh the page to get updated data
+      
       router.replace(router.asPath);
     } catch (error) {
       console.error("Failed to post reply:", error);
@@ -346,13 +346,13 @@ const DiscussionPage = ({ discussionData, error }) => {
   );
 };
 
-// Server-side rendering to fetch discussion data
+
 export async function getServerSideProps(context) {
   const { discussionID } = context.params;
   const { req } = context;
 
   try {
-    // Get the cookie from the request headers
+    
     const cookies = req.headers.cookie;
 
     if (!cookies) {
@@ -364,7 +364,7 @@ export async function getServerSideProps(context) {
       };
     }
 
-    // Fetch discussion details using axios from the server
+    
     const response = await axios.get(
       `http://localhost:3000/api/student/discussions/${discussionID}`,
       {
@@ -384,7 +384,7 @@ export async function getServerSideProps(context) {
   } catch (error) {
     console.error("Error fetching discussion details:", error);
 
-    // Handle unauthorized errors by redirecting to sign-in
+    
     if (error.response?.status === 401) {
       return {
         redirect: {

@@ -6,13 +6,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   try {
-    // Get current user
+    
     const { userId } = await getAuth(req);
     if (!userId) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Get student details including department and batch info
+    
     const student = await prisma.student.findFirst({
       where: { user_id: userId },
       include: {
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Student not found" });
     }
 
-    // Get all custom groups the student is part of
+    
     const customGroupMemberships = await prisma.customGroupMembers.findMany({
       where: { user_id: userId },
       select: { custom_group: { select: { group_id: true } } },
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       (membership) => membership.custom_group.group_id
     );
 
-    // Get department and batch groups
+    
     const [departmentGroup, batchGroup] = await Promise.all([
       prisma.departmentGroup.findFirst({
         where: { department_id: student.department_batch.department.id },
@@ -51,11 +51,11 @@ export default async function handler(req, res) {
       }),
     ]);
 
-    // Get forums that are either public (group_id is null) or belong to student's groups
+    
     const forums = await prisma.forum.findMany({
       where: {
         OR: [
-          { group_id: null }, // Public forums
+          { group_id: null }, 
           {
             group_id: {
               in: [
@@ -64,11 +64,11 @@ export default async function handler(req, res) {
                 ...customGroupIds,
               ],
             },
-          }, // Forums in student's groups
+          }, 
         ],
       },
       include: {
-        group: true, // Include group details if it exists
+        group: true, 
         threads: {
           select: {
             id: true,

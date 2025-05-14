@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get batch_id from request body
+    
     const { batch_id } = req.body
 
-    // Get existing batch
+    
     const existingBatch = await prisma.batch.findUnique({
       where: { id: batch_id }
     })
@@ -35,14 +35,14 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Batch not found' })
     }
 
-    // Delete all related records in transaction
+    
     await prisma.$transaction(async (tx) => {
-      // Delete from BatchGroup
+      
       await tx.batchGroup.deleteMany({
         where: { batch_id: batch_id }
       })
 
-      // Delete Classrooms and related records
+      
       const classrooms = await tx.classroom.findMany({
         where: { batch_id: batch_id },
         select: { id: true }
@@ -50,19 +50,19 @@ export default async function handler(req, res) {
       
       const classroomIds = classrooms.map(classroom => classroom.id)
 
-      // Delete classroom related records
+      
       for (const classroomId of classroomIds) {
-        // Delete ClassroomTeachers
+        
         await tx.classroomTeachers.deleteMany({
           where: { classroom_id: classroomId }
         })
 
-        // Delete Enrollments
+        
         await tx.enrollment.deleteMany({
           where: { classroom_id: classroomId }
         })
 
-        // Delete ClassroomThreads and related records
+        
         const threads = await tx.classroomThread.findMany({
           where: { classroom_id: classroomId },
           select: { id: true }
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
 
         const threadIds = threads.map(thread => thread.id)
 
-        // Delete ClassroomPosts and attachments
+        
         await tx.classroomPostAttachments.deleteMany({
           where: { post: { thread_id: { in: threadIds } } }
         })
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
           where: { classroom_id: classroomId }
         })
 
-        // Delete Assignments and related records
+        
         const assignments = await tx.assignment.findMany({
           where: { classroom_id: classroomId },
           select: { id: true }
@@ -104,12 +104,12 @@ export default async function handler(req, res) {
         })
       }
 
-      // Delete Classrooms
+      
       await tx.classroom.deleteMany({
         where: { batch_id: batch_id }
       })
 
-      // Delete DepartmentBatches and related Students
+      
       const departmentBatches = await tx.departmentBatches.findMany({
         where: { batch_id: batch_id },
         include: {
@@ -119,23 +119,23 @@ export default async function handler(req, res) {
         }
       })
 
-      // Get all student users before deleting
+      
       const students = departmentBatches.flatMap(batch => batch.students)
       const userIds = students.map(s => s.user.id)
 
-      // Delete user related records
+      
       for (const userId of userIds) {
-        // Delete CustomGroupMembers
+        
         await tx.customGroupMembers.deleteMany({
           where: { user_id: userId }
         })
 
-        // Delete CustomGroups created by user
+        
         await tx.customGroup.deleteMany({
           where: { user_id: userId }
         })
 
-        // Delete ThreadPostAttachments and ThreadPosts
+        
         const threadPosts = await tx.threadPost.findMany({
           where: { user_id: userId }
         })
@@ -150,7 +150,7 @@ export default async function handler(req, res) {
           where: { user_id: userId }
         })
 
-        // Delete Forums created by user
+        
         await tx.forum.deleteMany({
           where: { user_id: userId }
         })
@@ -165,12 +165,12 @@ export default async function handler(req, res) {
         where: { batch_id: batch_id }
       })
 
-      // Finally delete the Batch
+      
       await tx.batch.delete({
         where: { id: batch_id }
       })
 
-      // Delete users from Clerk after all DB records are cleaned
+      
       for (const userId of userIds) {
         await client.users.deleteUser(userId)
       }

@@ -15,7 +15,7 @@ export const FacultyDashboard = ({ data }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header Section */}
+        
         <div className="mb-16">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
             Welcome {data.user.first_name} {data.user.last_name}
@@ -24,7 +24,7 @@ export const FacultyDashboard = ({ data }) => {
           </p>
         </div>
 
-        {/* Stats Section */}
+        
         <div className="mb-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-all">
@@ -77,9 +77,9 @@ export const FacultyDashboard = ({ data }) => {
           </div>
         </div>
 
-        {/* Content Section */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Assignments Section */}
+          
           <div className="bg-white rounded-2xl shadow-sm">
             <div className="p-6 border-b border-slate-100">
               <div className="flex items-center justify-between">
@@ -124,7 +124,7 @@ export const FacultyDashboard = ({ data }) => {
             </div>
           </div>
 
-          {/* Discussions Section */}
+          
           <div className="bg-white rounded-2xl shadow-sm">
             <div className="p-6 border-b border-slate-100">
               <div className="flex items-center justify-between">

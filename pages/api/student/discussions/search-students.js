@@ -15,7 +15,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Get current student's university
+    
     const student = await prisma.student.findUnique({
       where: { user_id: userId },
       include: {
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Student not found" });
     }
 
-    // Search for students in the same university
+    
     const students = await prisma.student.findMany({
       where: {
         department_batch: {
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
           },
         },
         NOT: {
-          user_id: userId, // Exclude current user
+          user_id: userId, 
         },
         OR: [
           {
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
           },
         },
       },
-      take: 10, // Limit results
+      take: 10, 
     });
 
     return res.status(200).json({

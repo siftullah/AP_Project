@@ -19,7 +19,7 @@ const AnnouncementPage = ({ announcementData, error }) => {
     return <Loader />;
   }
 
-  // Error handling UI
+  
   if (error) {
     return (
       <div className="bg-gradient-to-b from-blue-50 via-blue-50/30 to-white px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
@@ -91,10 +91,10 @@ const AnnouncementPage = ({ announcementData, error }) => {
         { reply }
       );
 
-      // Clear reply field after submission
+      
       setReply("");
 
-      // Refresh the page to show the new reply
+      
       router.replace(router.asPath);
     } catch (error) {
       console.error("Failed to post reply:", error);
@@ -340,13 +340,13 @@ const AnnouncementPage = ({ announcementData, error }) => {
   );
 };
 
-// Server-side rendering to fetch announcement details
+
 export async function getServerSideProps(context) {
   const { req, params } = context;
   const { announcementID } = params;
 
   try {
-    // Get the cookie from the request headers
+    
     const cookies = req.headers.cookie;
 
     if (!cookies) {
@@ -358,7 +358,7 @@ export async function getServerSideProps(context) {
       };
     }
 
-    // Fetch announcement details using axios from the server
+    
     const response = await axios.get(
       `http://localhost:3000/api/student/announcements/${announcementID}`,
       {
@@ -378,7 +378,7 @@ export async function getServerSideProps(context) {
   } catch (error) {
     console.error("Error fetching announcement details:", error);
 
-    // Handle unauthorized errors by redirecting to sign-in
+    
     if (error.response?.status === 401) {
       return {
         redirect: {

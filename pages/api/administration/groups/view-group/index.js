@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { group_id } = req.body
 
-    // Check if group exists and is custom type
+    
     const existingGroup = await prisma.group.findUnique({
       where: { id: group_id },
       include: {
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Not a custom group' })
     }
 
-    // Get member details
+    
     const members = existingGroup.custom?.members.map(member => ({
       name: `${member.user.first_name} ${member.user.last_name}`,
       role: member.user.role

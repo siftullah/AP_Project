@@ -98,7 +98,6 @@ export default function ForumThreadsPage({ initialForum, initialThreads }) {
 
       await fetchData()
 
-      // Reset form
       setThreadTitle('')
       setThreadDescription('')
       setDialogOpen(false)
@@ -132,7 +131,7 @@ export default function ForumThreadsPage({ initialForum, initialThreads }) {
 
       await fetchData()
       
-      // Reset edit state
+
       setEditingThread(null)
       setEditTitle('')
       setEditDialogOpen(false)
@@ -168,7 +167,7 @@ export default function ForumThreadsPage({ initialForum, initialThreads }) {
 
   const fetchData = async () => {
     try {
-      // Fetch forum details
+
       const forumResponse = await fetch(`/api/administration/forums/get-forums?forum_id=${forumId}`)
       if (!forumResponse.ok) {
         throw new Error('Failed to fetch forum details')
@@ -177,7 +176,6 @@ export default function ForumThreadsPage({ initialForum, initialThreads }) {
       setForum(forumData[0])
       setEditForumName(forumData[0].name)
 
-      // Fetch threads
       const threadsResponse = await fetch(`/api/administration/forums/get-threads?forum_id=${forumId}`)
       if (!threadsResponse.ok) {
         throw new Error('Failed to fetch threads')
@@ -214,7 +212,7 @@ export default function ForumThreadsPage({ initialForum, initialThreads }) {
         Back to Forums
       </Button>
 
-      {/* Forum Details Card */}
+      
       <Card className="w-full mb-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
         <CardContent className="pt-6">
           <h1 className="text-2xl font-bold mb-4">{forum.name}</h1>
@@ -296,7 +294,7 @@ export default function ForumThreadsPage({ initialForum, initialThreads }) {
         </CardFooter>
       </Card>
 
-      {/* Threads Section */}
+      
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Threads</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -470,7 +468,7 @@ export default function ForumThreadsPage({ initialForum, initialThreads }) {
 
 export async function getServerSideProps({ req, params }) {
   try {
-    // Fetch forum details
+
     const forumResponse = await fetch(`http://localhost:3000/api/administration/forums/get-forums?forum_id=${params.id}`, {
       headers: {
         Cookie: req.headers.cookie || ""
@@ -483,7 +481,7 @@ export async function getServerSideProps({ req, params }) {
     
     const forumData = await forumResponse.json()
 
-    // Fetch threads
+
     const threadsResponse = await fetch(`http://localhost:3000/api/administration/forums/get-threads?forum_id=${params.id}`, {
       headers: {
         Cookie: req.headers.cookie || ""

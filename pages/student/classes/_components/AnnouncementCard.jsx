@@ -21,7 +21,7 @@ const AnnouncementCard = ({ announcements }) => {
 
   const pathname = usePathname();
 
-  // Calculate how recent the announcement is
+  
   const getTimeAgo = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();

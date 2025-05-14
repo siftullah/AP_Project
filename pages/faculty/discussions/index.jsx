@@ -91,7 +91,7 @@ const DiscussionCard = ({ discussions }) => {
           key={discussion.id}
           className="group rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all bg-white"
         >
-          {/* Top Blue Accent Strip */}
+          
           <div className="h-2 bg-gradient-to-r from-blue-500 to-black-700"></div>
 
           <CardHeader className="pb-1">

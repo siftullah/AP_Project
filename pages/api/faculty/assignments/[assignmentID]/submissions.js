@@ -60,7 +60,7 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Assignment not found" });
       }
 
-      // Format the response
+      
       const formattedResponse = {
         assignment: {
           id: assignment.id,

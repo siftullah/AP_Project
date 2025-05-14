@@ -25,14 +25,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { threadId, title } = req.body
 
     if (!threadId || !title) {
       return res.status(400).json({ error: 'Thread ID and title are required' })
     }
 
-    // Update thread
+    
     const updatedThread = await prisma.thread.update({
       where: {
         id: threadId,

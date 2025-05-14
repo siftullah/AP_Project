@@ -26,14 +26,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get classroom ID from URL
+    
     const { classroom_id } = req.query
 
     if (!classroom_id) {
       return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
-    // Get enrolled students for the classroom
+    
     const enrolledStudents = await prisma.enrollment.findMany({
       where: {
         classroom_id: classroom_id
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Get all students from the university
+    
     const allUniversityStudents = await prisma.student.findMany({
       where: {
         department_batch: {
@@ -73,14 +73,14 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format enrolled students data
+    
     const enrolledStudentsList = enrolledStudents.map(enrollment => ({
       user_id: enrollment.student.user.id,
       roll_number: enrollment.student.roll_number,
       name: `${enrollment.student.user.first_name} ${enrollment.student.user.last_name}`
     }))
 
-    // Format all university students data with enrollment status
+    
     const allStudentsList = allUniversityStudents.map(student => ({
       user_id: student.user.id,
       roll_number: student.roll_number,

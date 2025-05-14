@@ -299,12 +299,12 @@ const DiscussionCard = ({ discussions }) => {
   );
 };
 
-// Use getServerSideProps to fetch data on the server side
+
 export async function getServerSideProps(context) {
   const { req } = context;
 
   try {
-    // Fetch discussions using axios from the server
+    
     const response = await axios.get(
       `http://localhost:3000/api/student/discussions`,
       {

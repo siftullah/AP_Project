@@ -22,14 +22,14 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
 
-    // Get request body
+    
     const { threadId, description } = req.body
 
     if (!threadId || !description) {
       return res.status(400).json({ error: 'Thread ID and description are required' })
     }
 
-    // Create new post
+    
     const post = await prisma.classroomPost.create({
       data: {
         thread_id: threadId,

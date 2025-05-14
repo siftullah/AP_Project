@@ -38,14 +38,14 @@ const CreateDiscussion = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [file, setFile] = useState(null);
 
-  // State for managing loading, data and errors
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableGroups, setAvailableGroups] = useState(null);
   const [searchResults, setSearchResults] = useState({ students: [] });
   const [error, setError] = useState(null);
 
-  // Fetch available groups
+  
   useEffect(() => {
     const fetchAvailableGroups = async () => {
       setIsLoading(true);
@@ -67,7 +67,7 @@ const CreateDiscussion = () => {
     fetchAvailableGroups();
   }, []);
 
-  // Search for students when query changes
+  
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults({ students: [] });
@@ -122,7 +122,7 @@ const CreateDiscussion = () => {
         },
       });
 
-      // Redirect on success
+      
       router.push("/student/discussions");
     } catch (error) {
       console.error("Error creating discussion:", error);

@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get faculty details from request body
+    
     const { faculty_id, first_name, last_name, email, department_id, designation } = req.body
 
-    // Get existing faculty record
+    
     const existingFaculty = await prisma.faculty.findUnique({
       where: { id: faculty_id },
       include: { user: true }
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Faculty not found' })
     }
 
-    // Get Clerk user details
+    
     const clerkUser = await client.users.getUser(existingFaculty.user_id)
     const primaryEmailId = clerkUser.emailAddresses.find(email => email.id === clerkUser.primaryEmailAddressId)?.id
     const currentEmail = clerkUser.emailAddresses.find(email => email.id === clerkUser.primaryEmailAddressId)?.emailAddress
@@ -46,15 +46,15 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Primary email not found' })
     }
 
-    // Update Clerk user
+    
     await client.users.updateUser(existingFaculty.user_id, {
       firstName: first_name,
       lastName: last_name,
     })
 
-    // Only update email if it's different from current email
+    
     if (currentEmail !== email) {
-      // Create new email address
+      
       const newEmail = await client.emailAddresses.createEmailAddress({
         userId: existingFaculty.user_id,
         emailAddress: email,
@@ -62,11 +62,11 @@ export default async function handler(req, res) {
         verified: true
       })
 
-      // Delete old email address
+      
       await client.emailAddresses.deleteEmailAddress(primaryEmailId)
     }
 
-    // Update user in database
+    
     await prisma.user.update({
       where: { id: existingFaculty.user_id },
       data: {
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Update faculty record
+    
     const faculty = await prisma.faculty.update({
       where: { id: faculty_id },
       data: {

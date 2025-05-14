@@ -24,15 +24,15 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { forum_id, thread_title, description } = req.body
 
-    // Validate required fields
+    
     if (!forum_id || !thread_title || !description) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
-    // Create thread first
+    
     const thread = await prisma.thread.create({
       data: {
         forum: {
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Create thread post
+    
     const threadPost = await prisma.threadPost.create({
       data: {
         thread_id: thread.id,
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Update thread with main post
+    
     await prisma.thread.update({
       where: { id: thread.id },
       data: {

@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get batch details from request body
+    
     const { batch_id, batch_name } = req.body
 
-    // Find and update batch and associated group
+    
     const batch = await prisma.batch.update({
       where: {
         id: batch_id

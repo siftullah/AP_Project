@@ -24,18 +24,18 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get batches for university
+    
     const batches = await prisma.batch.findMany({
       where: {
         university_id: universityId
       },
       select: {
-        id: true, // batch_id
-        name: true // batch_name
+        id: true, 
+        name: true 
       }
     })
 
-    // Map to match requested field names
+    
     const mappedBatches = batches.map(batch => ({
       batch_id: batch.id,
       batch_name: batch.name

@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Faculty not found" });
     }
 
-    // Format the response
+    
     const classes = faculty.user.classroom_teachers.map((ct) => ({
       id: ct.classroom.id,
       name: ct.classroom.name,

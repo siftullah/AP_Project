@@ -25,10 +25,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get forum_id from query params if provided
+    
     const { forum_id } = req.query
 
-    // Base where clause
+    
     const whereClause = {
       university_id: universityId,
       ...(forum_id && { id: forum_id })

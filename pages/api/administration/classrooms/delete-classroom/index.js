@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get classroom_id from request body
+    
     const { classroom_id } = req.body
 
-    // Get existing classroom
+    
     const existingClassroom = await prisma.classroom.findUnique({
       where: { id: classroom_id }
     })
@@ -35,19 +35,19 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Classroom not found' })
     }
 
-    // Delete all related records in transaction
+    
     await prisma.$transaction(async (tx) => {
-      // Delete ClassroomTeachers
+      
       await tx.classroomTeachers.deleteMany({
         where: { classroom_id }
       })
 
-      // Delete Enrollments
+      
       await tx.enrollment.deleteMany({
         where: { classroom_id }
       })
 
-      // Delete ClassroomThreads and related records
+      
       const threads = await tx.classroomThread.findMany({
         where: { classroom_id },
         select: { id: true }
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
 
       const threadIds = threads.map(thread => thread.id)
 
-      // Delete ClassroomPosts and attachments
+      
       await tx.classroomPostAttachments.deleteMany({
         where: { post: { thread_id: { in: threadIds } } }
       })
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
         where: { classroom_id }
       })
 
-      // Delete Assignments and related records
+      
       const assignments = await tx.assignment.findMany({
         where: { classroom_id },
         select: { id: true }
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
         where: { classroom_id }
       })
 
-      // Finally delete the Classroom
+      
       await tx.classroom.delete({
         where: { id: classroom_id }
       })

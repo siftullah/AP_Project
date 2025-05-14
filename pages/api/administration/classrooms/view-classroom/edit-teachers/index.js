@@ -25,14 +25,14 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'University ID of authenticated user not found' })
     }
 
-    // Get request body
+    
     const { classroom_id, user_ids } = req.body
 
     if (!classroom_id || !user_ids) {
       return res.status(400).json({ error: 'Classroom ID and user IDs are required' })
     }
 
-    // Get existing classroom teachers
+    
     const existingTeachers = await prisma.classroomTeachers.findMany({
       where: {
         classroom_id: classroom_id,
@@ -45,14 +45,14 @@ export default async function handler(req, res) {
 
     const existingTeacherIds = existingTeachers.map(t => t.user_id)
     
-    // Find teachers to add and remove
+    
     const teachersToAdd = user_ids.filter(id => !existingTeacherIds.includes(id))
     const teachersToRemove = existingTeachers.filter(t => !user_ids.includes(t.user_id))
     const teacherIdsToRemove = teachersToRemove.map(t => t.user_id)
 
-    // Begin transaction
+    
     await prisma.$transaction(async (tx) => {
-      // Add new teachers
+      
       if (teachersToAdd.length > 0) {
         await tx.classroomTeachers.createMany({
           data: teachersToAdd.map(userId => ({
@@ -63,9 +63,9 @@ export default async function handler(req, res) {
         })
       }
 
-      // For teachers being removed:
+      
       if (teacherIdsToRemove.length > 0) {
-        // 1. Get all classroom threads created by these teachers
+        
         const threadsToDelete = await tx.classroomThread.findMany({
           where: {
             classroom_id: classroom_id,
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
         const threadIds = threadsToDelete.map(t => t.id)
         const assignmentIds = threadsToDelete.flatMap(t => t.assignments.map(a => a.id))
 
-        // 2. Delete submission attachments
+        
         await tx.submissionAttachments.deleteMany({
           where: {
             submission: {
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
           }
         })
 
-        // 3. Delete submissions
+        
         await tx.submission.deleteMany({
           where: {
             assignment_id: {
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
           }
         })
 
-        // 4. Delete assignments
+        
         await tx.assignment.deleteMany({
           where: {
             id: {
@@ -114,7 +114,7 @@ export default async function handler(req, res) {
           }
         })
 
-        // 5. Delete classroom post attachments
+        
         await tx.classroomPostAttachments.deleteMany({
           where: {
             post: {
@@ -125,7 +125,7 @@ export default async function handler(req, res) {
           }
         })
 
-        // 6. Delete classroom posts
+        
         await tx.classroomPost.deleteMany({
           where: {
             thread_id: {
@@ -134,7 +134,7 @@ export default async function handler(req, res) {
           }
         })
 
-        // 7. Delete classroom threads
+        
         await tx.classroomThread.deleteMany({
           where: {
             id: {
@@ -143,7 +143,7 @@ export default async function handler(req, res) {
           }
         })
 
-        // 8. Finally delete classroom teachers
+        
         await tx.classroomTeachers.deleteMany({
           where: {
             classroom_id: classroom_id,

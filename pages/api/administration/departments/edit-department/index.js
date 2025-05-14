@@ -26,10 +26,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get department details from request body
+    
     const { department_id, department_name } = req.body
 
-    // Find and update department and its associated group
+    
     const department = await prisma.department.update({
       where: {
         id: department_id

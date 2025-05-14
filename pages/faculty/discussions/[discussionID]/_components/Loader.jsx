@@ -11,30 +11,30 @@ const Loader = () => {
       </Button>
       <Card>
         <CardHeader>
-          {/* Title skeleton */}
+          
           <div className="bg-gray-300 rounded-md w-2/3 h-8 animate-pulse" />
-          {/* Author skeleton */}
+          
           <div className="bg-gray-300 mt-2 rounded-md w-1/4 h-4 animate-pulse" />
         </CardHeader>
         <CardContent>
-          {/* Description skeleton */}
+          
           <div className="space-y-2 mb-6">
             <div className="bg-gray-300 rounded-md w-full h-4 animate-pulse" />
             <div className="bg-gray-300 rounded-md w-full h-4 animate-pulse" />
             <div className="bg-gray-300 rounded-md w-3/4 h-4 animate-pulse" />
           </div>
 
-          {/* Replies skeleton */}
+          
           <div className="space-y-4">
             {[1, 2].map((_, index) => (
               <Card key={index}>
                 <CardContent className="flex items-start space-x-4 pt-4">
-                  {/* Avatar skeleton */}
+                  
                   <div className="bg-gray-300 rounded-full w-10 h-10 animate-pulse" />
                   <div className="flex-1">
-                    {/* Reply author skeleton */}
+                    
                     <div className="bg-gray-300 mb-2 rounded-md w-1/4 h-4 animate-pulse" />
-                    {/* Reply content skeleton */}
+                    
                     <div className="space-y-2">
                       <div className="bg-gray-300 rounded-md w-full h-4 animate-pulse" />
                       <div className="bg-gray-300 rounded-md w-3/4 h-4 animate-pulse" />
@@ -45,7 +45,7 @@ const Loader = () => {
             ))}
           </div>
 
-          {/* Reply form skeleton */}
+          
           <div className="mt-6">
             <div className="bg-gray-200 mb-2 rounded-md w-full h-24 animate-pulse" />
             <div className="bg-gray-200 rounded-md w-24 h-10 animate-pulse" />

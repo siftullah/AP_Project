@@ -26,7 +26,7 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
 
   const fetchThreadAndPosts = async () => {
     try {
-      // Fetch thread details
+
       const threadResponse = await fetch(`/api/administration/forums/get-threads?forum_id=${forumId}&thread_id=${threadId}`)
       if (!threadResponse.ok) {
         throw new Error('Failed to fetch thread details')
@@ -34,7 +34,6 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
       const threadData = await threadResponse.json()
       setThread(threadData[0])
 
-      // Fetch posts
       const postsResponse = await fetch(`/api/administration/forums/get-posts?thread_id=${threadId}`)
       if (!postsResponse.ok) {
         throw new Error('Failed to fetch posts')
@@ -66,10 +65,8 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         throw new Error('Failed to post reply')
       }
 
-      // Refresh thread and posts data
       await fetchThreadAndPosts()
       
-      // Clear the textarea
       setReplyContent('')
     } catch (err) {
       console.error('Error posting reply:', err)
@@ -99,10 +96,8 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         throw new Error('Failed to edit post')
       }
 
-      // Refresh thread and posts data
       await fetchThreadAndPosts()
       
-      // Reset edit state
       setEditingPostId(null)
       setEditContent('')
     } catch (err) {
@@ -126,7 +121,6 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         throw new Error('Failed to delete post')
       }
 
-      // Refresh thread and posts data
       await fetchThreadAndPosts()
     } catch (err) {
       console.error('Error deleting post:', err)
@@ -156,10 +150,8 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         throw new Error('Failed to edit thread')
       }
 
-      // Refresh thread data
       await fetchThreadAndPosts()
       
-      // Reset edit state
       setEditingThread(false)
       setEditThreadTitle('')
     } catch (err) {
@@ -183,7 +175,6 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         throw new Error('Failed to delete thread')
       }
 
-      // Redirect back to forum page
       router.push(`/administration/forums/${forumId}`)
     } catch (err) {
       console.error('Error deleting thread:', err)
@@ -212,7 +203,7 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         Back to Threads
       </Button>
 
-      {/* Thread Details Card */}
+      
       <Card className="w-full mb-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
         <CardContent className="pt-6">
           {editingThread ? (
@@ -296,7 +287,7 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         </CardFooter>
       </Card>
 
-      {/* Posts Section */}
+      
       <div className="mb-6">
         <h2 className="text-xl font-bold">Posts</h2>
       </div>
@@ -412,7 +403,7 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
         ))}
       </div>
 
-      {/* Reply Form */}
+      
       <Card className="mt-8">
         <CardContent className="pt-6">
           <h3 className="text-lg font-semibold mb-4">Post a Reply</h3>
@@ -444,7 +435,6 @@ export default function ThreadPostsPage({ initialThread, initialPosts }) {
 
 export async function getServerSideProps({ req, params }) {
   try {
-    // Fetch thread details
     const threadResponse = await fetch(`http://localhost:3000/api/administration/forums/get-threads?forum_id=${params.id}&thread_id=${params.thread_id}`, {
       headers: {
         Cookie: req.headers.cookie || ""
@@ -457,7 +447,6 @@ export async function getServerSideProps({ req, params }) {
     
     const threadData = await threadResponse.json()
 
-    // Fetch posts
     const postsResponse = await fetch(`http://localhost:3000/api/administration/forums/get-posts?thread_id=${params.thread_id}`, {
       headers: {
         Cookie: req.headers.cookie || ""

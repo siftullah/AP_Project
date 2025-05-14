@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     const { threadID } = req.query;
     const { reply } = req.body;
 
-    // POST reply on thread in post table
+    
     await prisma.classroomPost.create({
       data: {
         type: "reply",

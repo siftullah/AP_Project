@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get all roles for this university
+    
     const roles = await prisma.uniAdministrationRoles.findMany({
       where: {
         university_id: universityId

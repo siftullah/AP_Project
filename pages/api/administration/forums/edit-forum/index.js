@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req);
 
     if (!userId) {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
     const universityId = user?.publicMetadata['university_id']
 
-    // Get forum_id and forum_name from request body
+    
     const { forum_id, forum_name } = req.body
 
     if (!forum_id) {
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Forum name is required' })
     }
 
-    // Update forum
+    
     const updatedForum = await prisma.forum.update({
       where: {
         id: forum_id,

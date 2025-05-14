@@ -3,7 +3,7 @@ import { User } from "lucide-react";
 import Link from "next/link";
 
 export const ClassCard = ({ classroom, index }) => {
-  // Generate a consistent color based on the class name
+
   const colors = [
     "from-blue-500 to-blue-400",
     "from-blue-600 to-blue-500",

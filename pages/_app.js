@@ -24,7 +24,6 @@ export default function App({ Component, pageProps, router }) {
     return null;
   };
 
-  //getting the appropriate layout component
   const Layout = getLayout();
 
   return (

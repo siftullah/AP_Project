@@ -28,7 +28,7 @@ const FacultyStudentsPage = ({ data, initialFilter }) => {
 
   const handleFilterChange = (value) => {
     setFilter(value);
-    // Update the URL query parameter
+    
     router.push(
       {
         pathname: router.pathname,
@@ -47,7 +47,7 @@ const FacultyStudentsPage = ({ data, initialFilter }) => {
       });
       toast.success("Student removed successfully");
 
-      // Refresh the page to get updated data
+      
       router.replace(router.asPath);
     } catch (error) {
       console.error("Error removing student:", error);

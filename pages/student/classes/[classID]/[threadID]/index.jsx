@@ -22,7 +22,7 @@ const ThreadPage = ({ threadData, error }) => {
   const router = useRouter();
   const { classID, threadID } = router.query;
 
-  // Function to post a reply
+  
   const submitReply = async (replyText) => {
     if (!replyText.trim()) return;
 
@@ -37,7 +37,7 @@ const ThreadPage = ({ threadData, error }) => {
       );
 
       setReply("");
-      // Refresh the page to get updated data
+      
       router.replace(router.asPath);
     } catch (error) {
       console.error("Failed to post reply:", error);
@@ -339,13 +339,13 @@ const ThreadPage = ({ threadData, error }) => {
   );
 };
 
-// Use getServerSideProps to fetch data on the server side
+
 export async function getServerSideProps(context) {
   const { classID, threadID } = context.params;
   const { req } = context;
 
   try {
-    // Fetch thread details using axios from the server
+    
     const response = await axios.get(
       `http://localhost:3000/api/student/classes/${classID}/${threadID}`,
       {

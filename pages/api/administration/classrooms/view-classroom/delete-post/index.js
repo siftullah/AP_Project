@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req);
 
     if (!userId) {
@@ -26,14 +26,14 @@ export default async function handler(req, res) {
     }
     const universityId = user?.publicMetadata['university_id']
 
-    // Get post_id from URL params
+    
     const { post_id: postId } = req.query
 
     if (!postId) {
       return res.status(400).json({ error: 'Post ID is required' })
     }
 
-    // Check if post is a main post
+    
     const thread = await prisma.classroomThread.findFirst({
       where: {
         main_post_id: postId
@@ -43,28 +43,28 @@ export default async function handler(req, res) {
           orderBy: {
             createdAt: 'asc'
           },
-          take: 2 // Get main post and next post if exists
+          take: 2 
         }
       }
     })
 
-    // Delete post attachments first
+    
     await prisma.classroomPostAttachments.deleteMany({
       where: {
         post_id: postId
       }
     })
 
-    // If this is a main post and there are other posts, update thread with new main post
+    
     if (thread && thread.posts.length > 1) {
-      const nextPost = thread.posts[1] // Get next post after main post
+      const nextPost = thread.posts[1] 
       await prisma.classroomThread.update({
         where: { id: thread.id },
         data: { main_post_id: nextPost.id }
       })
     }
 
-    // Delete the post
+    
     const deletedPost = await prisma.classroomPost.delete({
       where: {
         id: postId

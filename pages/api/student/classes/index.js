@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Get student details including their classes
+    
     const studentWithClasses = await prisma.student.findFirst({
       where: {
         user_id: userId,

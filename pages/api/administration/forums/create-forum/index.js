@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req)
 
     if (!userId) {
@@ -24,14 +24,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get forum_name and group_id from request body
+    
     const { forum_name, group_id } = req.body
 
     if (!forum_name) {
       return res.status(400).json({ error: 'Forum name is required' })
     }
 
-    // Check if group exists if group_id is provided
+    
     if (group_id) {
       const group = await prisma.group.findUnique({
         where: { id: group_id }
@@ -41,13 +41,13 @@ export default async function handler(req, res) {
       }
     }
 
-    // Create new forum
+    
     const newForum = await prisma.forum.create({
       data: {
         forum_name,
         university_id: universityId,
         user_id: userId,
-        ...(group_id && { group_id }) // Only include group_id if provided and valid
+        ...(group_id && { group_id }) 
       }
     })
 

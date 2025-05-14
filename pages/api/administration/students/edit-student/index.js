@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get student details from request body
+    
     const { student_id, roll_number, first_name, last_name, email, department_id, batch_id } = req.body
 
-    // Get existing student record
+    
     const existingStudent = await prisma.student.findUnique({
       where: { id: student_id },
       include: { user: true }
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Student not found' })
     }
 
-    // Get Clerk user details
+    
     const clerkUser = await client.users.getUser(existingStudent.user_id)
     const primaryEmailId = clerkUser.emailAddresses.find(email => email.id === clerkUser.primaryEmailAddressId)?.id
     const currentEmail = clerkUser.emailAddresses.find(email => email.id === clerkUser.primaryEmailAddressId)?.emailAddress
@@ -45,15 +45,15 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Primary email not found' })
     }
 
-    // Update Clerk user
+    
     await client.users.updateUser(existingStudent.user_id, {
       firstName: first_name,
       lastName: last_name,
     })
 
-    // Only update email if it's different from current email
+    
     if (currentEmail !== email) {
-      // Create new email address
+      
       const newEmail = await client.emailAddresses.createEmailAddress({
         userId: existingStudent.user_id,
         emailAddress: email,
@@ -61,11 +61,11 @@ export default async function handler(req, res) {
         verified: true
       })
 
-      // Delete old email address
+      
       await client.emailAddresses.deleteEmailAddress(primaryEmailId)
     }
 
-    // Update user in database
+    
     await prisma.user.update({
       where: { id: existingStudent.user_id },
       data: {
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Get or create department batch
+    
     let departmentBatch = await prisma.departmentBatches.findFirst({
       where: {
         dept_id: department_id,
@@ -92,7 +92,7 @@ export default async function handler(req, res) {
       })
     }
 
-    // Update student record
+    
     const student = await prisma.student.update({
       where: { id: student_id },
       data: {

@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get departments for university
+    
     const departments = await prisma.department.findMany({
       where: {
         university_id: universityId

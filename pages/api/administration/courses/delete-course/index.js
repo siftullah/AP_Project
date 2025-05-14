@@ -20,10 +20,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get course_id from request body
+    
     const { course_id } = req.body
 
-    // Get existing course
+    
     const existingCourse = await prisma.course.findUnique({
       where: { id: course_id }
     })
@@ -32,9 +32,9 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Course not found' })
     }
 
-    // Delete all related records in transaction
+    
     await prisma.$transaction(async (tx) => {
-      // Get all classrooms for this course
+      
       const classrooms = await tx.classroom.findMany({
         where: { course_id: course_id },
         select: { id: true }
@@ -42,19 +42,19 @@ export default async function handler(req, res) {
       
       const classroomIds = classrooms.map(classroom => classroom.id)
 
-      // Delete classroom related records
+      
       for (const classroomId of classroomIds) {
-        // Delete ClassroomTeachers
+        
         await tx.classroomTeachers.deleteMany({
           where: { classroom_id: classroomId }
         })
 
-        // Delete Enrollments
+        
         await tx.enrollment.deleteMany({
           where: { classroom_id: classroomId }
         })
 
-        // Delete ClassroomThreads and related records
+        
         const threads = await tx.classroomThread.findMany({
           where: { classroom_id: classroomId },
           select: { id: true }
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
 
         const threadIds = threads.map(thread => thread.id)
 
-        // Delete ClassroomPosts and attachments
+        
         await tx.classroomPostAttachments.deleteMany({
           where: { post: { thread_id: { in: threadIds } } }
         })
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
           where: { classroom_id: classroomId }
         })
 
-        // Delete Assignments and related records
+        
         const assignments = await tx.assignment.findMany({
           where: { classroom_id: classroomId },
           select: { id: true }
@@ -96,12 +96,12 @@ export default async function handler(req, res) {
         })
       }
 
-      // Delete Classrooms
+      
       await tx.classroom.deleteMany({
         where: { course_id: course_id }
       })
 
-      // Finally delete the Course
+      
       await tx.course.delete({
         where: { id: course_id }
       })

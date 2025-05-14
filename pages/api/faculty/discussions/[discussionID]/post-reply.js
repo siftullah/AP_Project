@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get current user
+    
     const { userId } = getAuth(req);
     if (!userId) {
       return res.status(401).json({ error: "Unauthenticated User" });
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
     const { reply } = req.body;
 
-    // POST reply on thread in post table
+    
 
     await prisma.threadPost.create({
       data: {

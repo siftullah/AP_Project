@@ -23,12 +23,12 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get groups for this university by checking related tables
+    
     const groups = await prisma.group.findMany({
       where: {
         OR: [
           {
-            // Check batch groups
+            
             batch: {
               batch: {
                 university_id: universityId
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
             }
           },
           {
-            // Check department groups 
+            
             department: {
               department: {
                 university_id: universityId
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
             }
           },
           {
-            // Check custom groups
+            
             custom: {
               created_by: {
                 university_id: universityId

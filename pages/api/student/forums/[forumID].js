@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get current user
+    
     const { userId } = await getAuth(req);
     if (!userId) {
       return res.status(401).json({ error: "Unauthenticated User" });

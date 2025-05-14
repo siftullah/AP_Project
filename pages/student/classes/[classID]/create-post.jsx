@@ -22,14 +22,14 @@ const CreateClassPost = () => {
   const router = useRouter();
   const { classID } = router.query;
 
-  // Function to create a new post
+  
   const submitPost = async (postData) => {
     setIsSubmitting(true);
 
     try {
       await axios.post(`/api/student/classes/${classID}/create-post`, postData);
 
-      // Redirect to class page on success
+      
       router.push(`/student/classes/${classID}`);
     } catch (error) {
       console.error("Error creating post:", error);

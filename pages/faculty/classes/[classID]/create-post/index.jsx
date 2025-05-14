@@ -50,7 +50,7 @@ const CreateClassPost = ({ classDetails, error }) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      // Create preview URL for supported file types
+      
       if (selectedFile.type.startsWith("image/")) {
         setFilePreview(URL.createObjectURL(selectedFile));
       }

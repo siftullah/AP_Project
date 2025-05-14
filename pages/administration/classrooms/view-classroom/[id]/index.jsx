@@ -55,14 +55,12 @@ export default function ViewClassroomPage() {
         setTeachers(teachersData.faculty_by_department)
         setTeachingAssistants(tasData.students_by_department)
         
-        // Set initially selected teachers
         const initialSelectedTeachers = Object.values(teachersData.faculty_by_department)
           .flat()
           .filter(teacher => teacher.is_classroom_teacher)
           .map(teacher => teacher.user_id)
         setSelectedTeachers(initialSelectedTeachers)
 
-        // Set initially selected TAs
         const initialSelectedTAs = Object.values(tasData.students_by_department)
           .flat()
           .filter(student => student.is_classroom_teacher)
@@ -99,7 +97,6 @@ export default function ViewClassroomPage() {
         throw new Error('Failed to update teachers')
       }
 
-      // Refresh teachers list
       const teachersResponse = await fetch(`/api/administration/classrooms/view-classroom/get-teachers?classroom_id=${classroomId}`, {
         headers: {
        
@@ -136,7 +133,6 @@ export default function ViewClassroomPage() {
         throw new Error('Failed to update teaching assistants')
       }
 
-      // Refresh TAs list
       const tasResponse = await fetch(`/api/administration/classrooms/view-classroom/get-teaching-assistants?classroom_id=${classroomId}`, {
         headers: {
      
@@ -198,7 +194,7 @@ export default function ViewClassroomPage() {
         
         <CardContent>
           <div className="grid grid-cols-3 gap-6">
-            {/* Course Information Card */}
+            
             <Card className="bg-blue-50/50">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2 text-blue-700">
@@ -218,7 +214,7 @@ export default function ViewClassroomPage() {
               </CardContent>
             </Card>
 
-            {/* Department Information Card */}
+            
             <Card className="bg-green-50/50">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2 text-green-700">
@@ -234,7 +230,7 @@ export default function ViewClassroomPage() {
               </CardContent>
             </Card>
 
-            {/* Batch Information Card */}
+            
             <Card className="bg-purple-50/50">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
@@ -258,7 +254,7 @@ export default function ViewClassroomPage() {
             </Card>
           </div>
 
-          {/* Teachers Card */}
+          
           <Card className="mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -323,7 +319,7 @@ export default function ViewClassroomPage() {
             </CardContent>
           </Card>
 
-          {/* Teaching Assistants Card */}
+          
           <Card className="mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">

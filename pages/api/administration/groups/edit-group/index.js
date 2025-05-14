@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { group_id, group_name } = req.body
 
-    // Check if group exists
+    
     const existingGroup = await prisma.group.findUnique({
       where: { id: group_id }
     })
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Group not found' })
     }
 
-    // Update group name
+    
     const updatedGroup = await prisma.group.update({
       where: { id: group_id },
       data: { name: group_name }

@@ -54,7 +54,7 @@ const Loader = () => {
             <Skeleton className="bg-gradient-to-r from-blue-200 to-blue-100 w-40 h-6" />
           </div>
 
-          {/* Reply skeletons */}
+          
           {[1, 2, 3].map((i) => (
             <Card
               key={i}

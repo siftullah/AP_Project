@@ -25,14 +25,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { postId, description } = req.body
 
     if (!postId || !description) {
       return res.status(400).json({ error: 'Post ID and description are required' })
     }
 
-    // Update post
+    
     const updatedPost = await prisma.classroomPost.update({
       where: {
         id: postId

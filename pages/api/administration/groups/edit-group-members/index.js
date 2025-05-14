@@ -24,14 +24,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { group_id, user_ids } = req.body
 
     if (!group_id || !user_ids || !Array.isArray(user_ids)) {
       return res.status(400).json({ error: 'Invalid request parameters' })
     }
 
-    // Check if group exists and is custom type
+    
     const existingGroup = await prisma.group.findUnique({
       where: { id: group_id },
       include: {
@@ -51,16 +51,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Only custom groups can be edited' })
     }
 
-    // Get existing member IDs
+    
     const existingMemberIds = existingGroup.custom.members.map(member => member.user_id)
 
-    // Find members to add (in user_ids but not in existingMemberIds)
+    
     const membersToAdd = user_ids.filter(id => !existingMemberIds.includes(id))
 
-    // Find members to remove (in existingMemberIds but not in user_ids)
+    
     const membersToRemove = existingMemberIds.filter(id => !user_ids.includes(id))
 
-    // Add new members
+    
     if (membersToAdd.length > 0) {
       await prisma.customGroupMembers.createMany({
         data: membersToAdd.map(userId => ({
@@ -70,9 +70,9 @@ export default async function handler(req, res) {
       })
     }
 
-    // Remove old members and their content
+    
     if (membersToRemove.length > 0) {
-      // Delete thread post attachments
+      
       await prisma.threadPostAttachments.deleteMany({
         where: {
           post: {
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
         }
       })
 
-      // Delete thread posts
+      
       await prisma.threadPost.deleteMany({
         where: {
           user_id: { in: membersToRemove },
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
         }
       })
 
-      // Delete threads
+      
       await prisma.thread.deleteMany({
         where: {
           group_id: group_id,
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
         }
       })
 
-      // Delete forums
+      
       await prisma.forum.deleteMany({
         where: {
           group_id: group_id,
@@ -114,7 +114,7 @@ export default async function handler(req, res) {
         }
       })
 
-      // Finally remove members
+      
       await prisma.customGroupMembers.deleteMany({
         where: {
           custom_group_id: existingGroup.custom.id,

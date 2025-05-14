@@ -23,7 +23,7 @@ export default async function handler(req, res)
     }
     const university_id = user.publicMetadata['university_id']
 
-    // Get counts for all entities
+    
     const studentCount = await prisma.student.count({
       where: {
         department_batch: {

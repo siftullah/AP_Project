@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   try {
-    // Get current user
+    
     const { userId } = getAuth(req);
     if (!userId) {
       return res.status(401).json({ error: "Unauthenticated User" });
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
     const { discussionID } = req.query;
 
-    // Get annoucement details
+    
     const thread = await prisma.thread.findFirst({
       where: {
         id: discussionID,

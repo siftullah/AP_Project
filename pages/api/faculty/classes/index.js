@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Get faculty details including their classes
+    
     const facultyWithClasses = await prisma.faculty.findFirst({
       where: {
         user_id: userId,
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Faculty record not found" });
     }
 
-    // Format the response
+    
     const classes = facultyWithClasses.user.classroom_teachers.map((ct) => ({
       id: ct.classroom.id,
       name: ct.classroom.name,

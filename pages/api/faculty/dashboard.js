@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Get faculty data including their classrooms
+    
     const faculty = await prisma.faculty.findUnique({
       where: { user_id: userId },
       include: {
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Faculty not found" });
     }
 
-    // Calculate statistics
+    
     const activeClasses = faculty.user.classroom_teachers.length;
 
     const totalAssignments = faculty.user.classroom_teachers.reduce(
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       )
     ).size;
 
-    // Get recent assignments
+    
     const recentAssignments = faculty.user.classroom_teachers
       .flatMap((ct) =>
         ct.classroom.assignments.map((assignment) => ({
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       .sort((a, b) => b.due_date.getTime() - a.due_date.getTime())
       .slice(0, 3);
 
-    // Get recent discussions
+    
     const recentDiscussions = faculty.user.classroom_teachers
       .flatMap((ct) =>
         ct.classroom.threads.map((thread) => ({

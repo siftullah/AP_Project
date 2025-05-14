@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
     const { enrollmentId } = req.body;
 
-    // Verify faculty has access to this enrollment
+    
     const faculty = await prisma.faculty.findUnique({
       where: { user_id: userId },
       include: {
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
         .json({ error: "Unauthorized to remove this student" });
     }
 
-    // Remove the enrollment
+    
     await prisma.enrollment.delete({
       where: { id: enrollmentId },
     });

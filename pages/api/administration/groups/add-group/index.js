@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const { group_name, type, batch_id, department_id, user_ids } = req.body
 
-    // Create base group
+    
     const group = await prisma.group.create({
       data: {
         name: group_name,
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Handle different group types
+    
     if (type === 'batch' && batch_id) {
       await prisma.batchGroup.create({
         data: {
@@ -53,15 +53,15 @@ export default async function handler(req, res) {
       })
     }
     else if (type === 'custom' && user_ids && Array.isArray(user_ids)) {
-      // Create custom group
+      
       const customGroup = await prisma.customGroup.create({
         data: {
           group_id: group.id,
-          user_id: user.id // Created by current user
+          user_id: user.id 
         }
       })
 
-      // Add members to custom group
+      
       const memberPromises = user_ids.map(userId =>
         prisma.customGroupMembers.create({
           data: {

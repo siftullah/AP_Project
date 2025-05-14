@@ -26,14 +26,14 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get classroom ID from URL
+    
     const { classroom_id: classroomId } = req.query
 
     if (!classroomId) {
       return res.status(400).json({ error: 'Classroom ID is required' })
     }
 
-    // Get classroom teachers where type is ta
+    
     const classroomTeachers = await prisma.classroomTeachers.findMany({
       where: {
         classroom_id: classroomId,
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Get all students for the university
+    
     const students = await prisma.student.findMany({
       where: {
         department_batch: {
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Group students by department
+    
     const studentsByDepartment = {}
     students.forEach(student => {
       const department = student.department_batch.department.name

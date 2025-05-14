@@ -9,10 +9,10 @@ export default async function handler(req, res) {
 
   const { assignmentId } = req.query;
 
-  // GET request - fetch assignment details
+  
   if (req.method === "GET") {
     try {
-      // Get assignment details
+      
       const thread = await prisma.classroomThread.findFirst({
         where: {
           id: assignmentId,
@@ -96,12 +96,12 @@ export default async function handler(req, res) {
     }
   }
 
-  // POST request - submit assignment
+  
   else if (req.method === "POST") {
     try {
       const { attachments } = req.body;
 
-      // Get the student record
+      
       const student = await prisma.student.findUnique({
         where: { user_id: userId },
       });
@@ -110,7 +110,7 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: "Student record not found" });
       }
 
-      // Get thread and assignment
+      
       const thread = await prisma.classroomThread.findFirst({
         where: {
           id: assignmentId,
@@ -126,7 +126,7 @@ export default async function handler(req, res) {
 
       const assignment = thread.assignments[0];
 
-      // Find existing submission
+      
       const existingSubmission = await prisma.submission.findUnique({
         where: {
           assignment_id_student_id: {
@@ -136,16 +136,16 @@ export default async function handler(req, res) {
         },
       });
 
-      // Delete existing submission if it exists
+      
       if (existingSubmission) {
-        // First delete attachment records
+        
         await prisma.submissionAttachments.deleteMany({
           where: {
             submission_id: existingSubmission.id,
           },
         });
 
-        // Then delete submission record
+        
         await prisma.submission.delete({
           where: {
             id: existingSubmission.id,
@@ -153,7 +153,7 @@ export default async function handler(req, res) {
         });
       }
 
-      // Create new submission
+      
       const submission = await prisma.submission.create({
         data: {
           assignment_id: assignment.id,
@@ -185,10 +185,10 @@ export default async function handler(req, res) {
     }
   }
 
-  // DELETE request - delete submission
+  
   else if (req.method === "DELETE") {
     try {
-      // Get the student record
+      
       const student = await prisma.student.findUnique({
         where: { user_id: userId },
       });
@@ -197,7 +197,7 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: "Student record not found" });
       }
 
-      // Find the thread and assignment
+      
       const thread = await prisma.classroomThread.findFirst({
         where: {
           id: assignmentId,
@@ -213,7 +213,7 @@ export default async function handler(req, res) {
 
       const assignmentData = thread.assignments[0];
 
-      // Find the submission using the composite unique constraint
+      
       const submission = await prisma.submission.findUnique({
         where: {
           assignment_id_student_id: {
@@ -230,14 +230,14 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Submission not found" });
       }
 
-      // First delete attachment records
+      
       await prisma.submissionAttachments.deleteMany({
         where: {
           submission_id: submission.id,
         },
       });
 
-      // Then delete submission record
+      
       await prisma.submission.delete({
         where: {
           id: submission.id,
@@ -254,7 +254,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // Handle other HTTP methods
+  
   else {
     return res.status(405).json({ error: "Method not allowed" });
   }

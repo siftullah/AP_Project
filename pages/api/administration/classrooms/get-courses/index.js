@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get departments and their courses
+    
     const departments = await prisma.department.findMany({
       where: {
         university_id: universityId
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format response to group courses by department
+    
     const formattedDepartments = departments.map(department => ({
       department_name: department.name,
       courses: department.courses.map(course => ({

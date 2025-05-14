@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthenticated User" });
     }
 
-    // Get faculty's info including university and department/batch
+    
     const faculty = await prisma.faculty.findUnique({
       where: { user_id: userId },
       include: {
@@ -31,17 +31,17 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Student not found" });
     }
 
-    // Get available forums (public or in student's groups)
+    
     const forums = await prisma.forum.findMany({
       where: {
         university_id: faculty.department.university_id,
         OR: [
-          { group_id: null }, // Public forums
+          { group_id: null }, 
           {
             group_id: {
               in: [
-                faculty.department.id, // department forums
-                ...(batches.map((batch) => batch.id) || []), // batch forums
+                faculty.department.id, 
+                ...(batches.map((batch) => batch.id) || []), 
               ],
             },
           },

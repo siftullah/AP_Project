@@ -117,7 +117,6 @@ const SignUpPage = () => {
       newCode[index] = value;
       setVerificationCode(newCode);
 
-      // Move to the next input if a digit is entered
       if (value !== "" && index < 5) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -160,7 +159,7 @@ const SignUpPage = () => {
 
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
-        // Set role metadata
+     
         try {
           const response = await fetch("/api/sign-up/set-meta-data", {
             method: "POST",
@@ -173,14 +172,14 @@ const SignUpPage = () => {
           const data = await response.json();
 
           if (response.ok) {
-            console.log(data.message); // Meta data set successfully
-            router.push("/"); // Redirect to home after successful signup and verification
+            console.log(data.message); 
+            router.push("/"); 
           } else {
             console.error(data.error);
           }
         } catch (error) {
           console.error("Error:", error);
-          router.push("/"); // Still redirect even if metadata setting fails
+          router.push("/"); 
         }
       }
     } catch (err) {

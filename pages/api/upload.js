@@ -2,7 +2,7 @@ import { IncomingForm } from "formidable";
 import fs from "fs";
 import path from "path";
 
-// Disable the default body parser to handle form data
+
 export const config = {
   api: {
     bodyParser: false,
@@ -14,11 +14,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Create a promise-based wrapper for form parsing
+
   const parseForm = (req) => {
     return new Promise((resolve, reject) => {
       try {
-        // Create uploads directory if it doesn't exist
         const uploadsDir = path.join(process.cwd(), "public", "uploads");
         if (!fs.existsSync(uploadsDir)) {
           fs.mkdirSync(uploadsDir, { recursive: true });
@@ -55,7 +54,6 @@ export default async function handler(req, res) {
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
     const newPath = path.join(uploadsDir, fileName);
 
-    // Rename the file to use the custom filename
     fs.renameSync(oldPath, newPath);
 
     return res.status(200).json({

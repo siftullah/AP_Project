@@ -30,13 +30,12 @@ export default function ForumsPage({ initialForums }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(null)
 
-  // New forum state
   const [newForumName, setNewForumName] = useState('')
   const [forumType, setForumType] = useState('Public')
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const [showNewForumDialog, setShowNewForumDialog] = useState(false)
 
-  // Edit forum state
+
   const [editForumName, setEditForumName] = useState('')
   const [editForumId, setEditForumId] = useState('')
   const [showEditDialog, setShowEditDialog] = useState(false)
@@ -68,12 +67,10 @@ export default function ForumsPage({ initialForums }) {
 
       if (!response.ok) throw new Error('Failed to create forum')
       
-      // Refresh forums list
       const forumsResponse = await fetch('/api/administration/forums/get-forums')
       const newForums = await forumsResponse.json()
       setForums(newForums)
 
-      // Reset form
       setNewForumName('')
       setForumType('Public')
       setSelectedGroupId('')
@@ -99,7 +96,6 @@ export default function ForumsPage({ initialForums }) {
 
       if (!response.ok) throw new Error('Failed to update forum')
 
-      // Refresh forums list
       const forumsResponse = await fetch('/api/administration/forums/get-forums')
       const newForums = await forumsResponse.json()
       setForums(newForums)
@@ -123,7 +119,6 @@ export default function ForumsPage({ initialForums }) {
 
       if (!response.ok) throw new Error('Failed to delete forum')
 
-      // Refresh forums list
       const forumsResponse = await fetch('/api/administration/forums/get-forums')
       const newForums = await forumsResponse.json()
       setForums(newForums)

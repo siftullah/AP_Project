@@ -52,7 +52,7 @@ const ClassPage = ({ classDetails, error }) => {
         {classDetails.name}
       </h2>
 
-      {/* Class Information */}
+      
       <Card className="mb-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
           <CardTitle className="text-2xl text-gray-800">
@@ -146,7 +146,7 @@ const ClassPage = ({ classDetails, error }) => {
         </CardContent>
       </Card>
 
-      {/* Class Feed Section */}
+      
       <div className="mt-8">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-semibold text-2xl text-gray-900">Class Feed</h3>

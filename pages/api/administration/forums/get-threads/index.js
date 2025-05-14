@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req);
 
     if (!userId) {
@@ -22,14 +22,14 @@ export default async function handler(req, res) {
     }
     const universityId = user?.publicMetadata['university_id']
 
-    // Get forum_id and thread_id from URL
+    
     const { forum_id: forumId, thread_id: threadId } = req.query
 
     if (!forumId) {
       return res.status(400).json({ error: 'Forum ID is required' })
     }
 
-    // Base where clause
+    
     const whereClause = {
       forum_id: forumId,
       university_id: universityId,

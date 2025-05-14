@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Get student's info including university and department/batch
+    
     const student = await prisma.student.findUnique({
       where: { user_id: userId },
       include: {
@@ -33,17 +33,17 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Student not found" });
     }
 
-    // Get available forums (public or in student's groups)
+    
     const forums = await prisma.forum.findMany({
       where: {
         university_id: student.department_batch.batch.university_id,
         OR: [
-          { group_id: null }, // Public forums
+          { group_id: null }, 
           {
             group_id: {
               in: [
-                student.department_batch.batch.id, // Batch forums
-                student.department_batch.department.id, // Department forums
+                student.department_batch.batch.id, 
+                student.department_batch.department.id, 
               ],
             },
           },
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
       },
     });
 
-    // Get batch and department info
+    
     const batch = {
       id: student.department_batch.batch.id,
       name: student.department_batch.batch.name,

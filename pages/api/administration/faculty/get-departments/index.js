@@ -24,18 +24,18 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get departments for university
+    
     const departments = await prisma.department.findMany({
       where: {
         university_id: universityId
       },
       select: {
-        id: true, // department_id
-        name: true // department_name
+        id: true, 
+        name: true 
       }
     })
 
-    // Map to match requested field names
+    
     const mappedDepartments = departments.map(dept => ({
       department_id: dept.id,
       department_name: dept.name

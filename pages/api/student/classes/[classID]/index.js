@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     const { classID } = req.query;
 
-    // Get classroom details with related data
+    
     const classroom = await prisma.classroom.findFirst({
       where: {
         id: classID,
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
         .json({ error: "Classroom not found or access denied" });
     }
 
-    // Format the response
+    
     const formattedResponse = {
       id: classroom.id,
       name: classroom.name,

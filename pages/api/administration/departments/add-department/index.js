@@ -26,10 +26,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get department name from request body
+    
     const { name } = req.body
 
-    // Create department
+    
     const department = await prisma.department.create({
       data: {
         name,

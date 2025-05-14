@@ -34,7 +34,7 @@ const AnnouncementPage = ({ initialAnnouncementData }) => {
       setReply("");
       toast.success("Reply posted successfully!");
 
-      // Refresh announcement data
+      
       const { data } = await axios.get(
         `/api/faculty/announcements/${announcementID}`
       );

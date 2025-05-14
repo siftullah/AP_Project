@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const prisma = new PrismaClient()
   
   try {
-    // Get current user and their university_id from metadata
+    
     const { userId } = getAuth(req)
 
     if (!userId) {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get request body
+    
     const body = req.body
     const { threadId, title } = body
 
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Thread ID and title are required' })
     }
 
-    // Update thread
+    
     const updatedThread = await prisma.classroomThread.update({
       where: {
         id: threadId

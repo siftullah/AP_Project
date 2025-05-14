@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
       const assignmentID = req.query.assignmentID;
 
-      // Check if the user is a faculty member
+      
       const faculty = await prisma.faculty.findUnique({
         where: { user_id: userId },
       });
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Assignment not found" });
       }
 
-      // Format the response
+      
       const formattedResponse = {
         id: assignment.id,
         thread_id: assignment.thread_id,
@@ -144,7 +144,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // First, check if the assignment exists
+      
       const existingAssignment = await prisma.assignment.findUnique({
         where: { id: assignmentID },
         include: {
@@ -160,16 +160,16 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Assignment not found" });
       }
 
-      // Perform updates in parallel using Promise.all
+      
       const [updatedThread, updatedMainPost, updatedAssignment] =
         await Promise.all([
-          // Update thread
+          
           prisma.classroomThread.update({
             where: { id: existingAssignment.thread_id },
             data: { title },
           }),
 
-          // Update main post if it exists
+          
           existingAssignment.thread.main_post_id
             ? prisma.classroomPost.update({
                 where: { id: existingAssignment.thread.main_post_id },
@@ -177,7 +177,7 @@ export default async function handler(req, res) {
               })
             : Promise.resolve(null),
 
-          // Update assignment
+          
           prisma.assignment.update({
             where: { id: assignmentID },
             data: {
@@ -204,7 +204,7 @@ export default async function handler(req, res) {
           }),
         ]);
 
-      // Format the response
+      
       const formattedResponse = {
         id: updatedAssignment.id,
         thread_id: updatedAssignment.thread_id,
@@ -236,6 +236,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // Handle unsupported methods
+  
   return res.status(405).json({ error: "Method not allowed" });
 }

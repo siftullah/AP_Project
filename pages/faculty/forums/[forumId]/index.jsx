@@ -21,7 +21,7 @@ const ForumPage = ({ forumData }) => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50/30 to-slate-100/60 py-12 px-2 overflow-x-hidden">
-      {/* Decorative blurred background shapes */}
+      
       <div className="pointer-events-none select-none">
         <div className="absolute -top-40 right-0 w-[600px] h-[400px] bg-gradient-to-br from-blue-200/20 via-cyan-100/20 to-transparent rounded-full blur-[120px] z-0" />
         <div className="absolute bottom-0 -left-40 w-[500px] h-[300px] bg-gradient-to-tr from-cyan-100/20 via-blue-100/20 to-transparent rounded-full blur-[100px] z-0" />
@@ -34,7 +34,7 @@ const ForumPage = ({ forumData }) => {
           <ArrowLeftIcon className="mr-2 w-4 h-4" />
           Back
         </Button>
-        {/* Forum Main Card */}
+        
         <Card className="mb-12 bg-white/95 rounded-3xl shadow-2xl border-0 px-0 md:px-8 py-8">
           <CardHeader>
             <div className="flex items-center gap-6">
@@ -52,7 +52,7 @@ const ForumPage = ({ forumData }) => {
           </CardContent>
         </Card>
 
-        {/* Threads List */}
+        
         <div>
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Threads</h2>
           {!forumData?.threads?.length && (

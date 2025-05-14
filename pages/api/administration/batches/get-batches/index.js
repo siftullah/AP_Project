@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get batches with related counts
+    
     const batches = await prisma.batch.findMany({
       where: {
         university_id: universityId
@@ -38,9 +38,9 @@ export default async function handler(req, res) {
       }
     })
 
-    // Format the response with counts
+    
     const formattedBatches = batches.map(batch => {
-      // Count total students across all departments
+      
       const studentCount = batch.departments.reduce((total, dept) => {
         return total + dept.students.length
       }, 0)

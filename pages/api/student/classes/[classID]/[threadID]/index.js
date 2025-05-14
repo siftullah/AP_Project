@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
     const { classID, threadID } = req.query;
 
-    // Get annoucement details
+    
     const thread = await prisma.classroomThread.findFirst({
       where: {
         id: threadID,

@@ -24,13 +24,13 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get faculty details from request body
+    
     const { first_name, last_name, email, department_id, designation } = req.body
 
-    // Generate random password for new user
+    
     const randomPassword = Math.random().toString(36).slice(-10)
 
-    // Create Clerk user first
+    
     const clerkUser = await client.users.createUser({
       emailAddress: [email],
       firstName: first_name,
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       password: randomPassword,
     })
 
-    // Create user record
+    
     const dbUser = await prisma.user.create({
       data: {
         id: clerkUser.id,
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Create faculty record
+    
     const faculty = await prisma.faculty.create({
       data: {
         user_id: clerkUser.id,
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Update Clerk user metadata
+    
     await client.users.updateUserMetadata(clerkUser.id, {
       publicMetadata: {
         role: 'faculty',

@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get batch name from request body
+    
     const { name } = req.body
 
-    // Create batch
+    
     const batch = await prisma.batch.create({
       data: {
         name,
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Create group and batch group
+    
     const group = await prisma.group.create({
       data: {
         name: `${name} Group`,
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       }
     })
 
-    // Get batch with groups included
+    
     const batchWithGroups = await prisma.batch.findUnique({
       where: {
         id: batch.id

@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     }
     const universityId = user.publicMetadata['university_id']
 
-    // Get classroom details from request body
+    
     const { name, course_id, batch_id } = req.body
 
-    // Verify course exists and belongs to user's university
+    
     const course = await prisma.course.findFirst({
       where: {
         id: course_id,
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Course not found' })
     }
 
-    // Verify batch exists and belongs to user's university
+    
     const batch = await prisma.batch.findFirst({
       where: {
         id: batch_id,
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Batch not found' })
     }
 
-    // Create classroom
+    
     const classroom = await prisma.classroom.create({
       data: {
         name,
